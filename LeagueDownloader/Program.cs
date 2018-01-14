@@ -10,6 +10,7 @@ namespace LeagueDownloader
     {
         static void Main(string[] args)
         {
+            Fantome.Libraries.League.IO.ReleaseManifest.ReleaseManifestFile wow = null;
         }
     }
 }
