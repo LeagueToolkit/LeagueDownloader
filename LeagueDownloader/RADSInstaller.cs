@@ -28,7 +28,7 @@ namespace LeagueDownloader
             this.Platform = platform;
         }
 
-        public void InstallSolution(string solutionName, string solutionVersion, string localization)
+        public void InstallSolution(string solutionName, string solutionVersion, string localization, uint? deployMode)
         {
             // Downloading solution manifest
             Console.WriteLine("Downloading solution manifest for release {0}", solutionVersion);
@@ -47,13 +47,13 @@ namespace LeagueDownloader
 
                 // Downloading each project
                 foreach (SolutionProject project in localizedEntry.Projects)
-                    InstallProject(project.Name, project.Version, solutionName, solutionVersion);
+                    InstallProject(project.Name, project.Version, deployMode, solutionName, solutionVersion);
 
                 File.Create(solutionFolder + "/S_OK").Close();
             }
         }
 
-        public void InstallProject(string projectName, string projectVersion, string solutionName = null, string solutionVersion = null)
+        public void InstallProject(string projectName, string projectVersion, uint? deployMode, string solutionName = null, string solutionVersion = null)
         {
             var projectsURL = String.Format("{0}/releases/{1}/projects/{2}", LeagueCDN, Platform, projectName);
 
@@ -95,8 +95,12 @@ namespace LeagueDownloader
                     fileURL += ".compressed";
                     compressed = true;
                 }
-
                 byte[] fileData = webClient.DownloadData(fileURL);
+
+                // Change deploy mode if specified
+                if (deployMode != null)
+                    file.DeployMode = (ReleaseManifestFile.DeployMode)deployMode;
+
                 if (file.DeployMode == RAFCompressed || file.DeployMode == RAFRaw)
                 {
                     // File has to be put in a RAF
@@ -136,6 +140,7 @@ namespace LeagueDownloader
                 }
             }
             currentRAF?.Dispose();
+            releaseManifest.Save();
             File.Create(releaseFolder + "/S_OK").Close();
         }
 

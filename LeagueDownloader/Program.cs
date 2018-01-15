@@ -29,6 +29,9 @@ namespace LeagueDownloader
 
             [Option('l', "localization", Required = true, HelpText = "Localization (e.g. en_gb).")]
             public string Localization { get; set; }
+
+            [Option('d', "deploy-mode", Required = false, Default = null, HelpText = "Forced deploy mode.")]
+            public uint? DeployMode { get; set; }
         }
 
         [Verb("project", HelpText = "Install a project.")]
@@ -39,6 +42,10 @@ namespace LeagueDownloader
 
             [Option('v', "version", Required = true, HelpText = "Project version (e.g. 0.0.1.7).")]
             public string Version { get; set; }
+
+            [Option('d', "deploy-mode", Required = false, Default = null, HelpText = "Forced deploy mode.")]
+            public uint? DeployMode { get; set; }
+
         }
 
         static void Main(string[] args)
@@ -53,14 +60,14 @@ namespace LeagueDownloader
         static int InstallSolution(SolutionOptions opts)
         {
             var radsInstaller = new RADSInstaller(opts.OutputFolder, opts.Platform);
-            radsInstaller.InstallSolution(opts.Name, opts.Version, opts.Localization);
+            radsInstaller.InstallSolution(opts.Name, opts.Version, opts.Localization, opts.DeployMode);
             return 1;
         }
 
         static int InstallProject(ProjectOptions opts)
         {
             var radsInstaller = new RADSInstaller(opts.OutputFolder, opts.Platform);
-            radsInstaller.InstallProject(opts.Name, opts.Version);
+            radsInstaller.InstallProject(opts.Name, opts.Version, opts.DeployMode);
             return 1;
         }
     }
