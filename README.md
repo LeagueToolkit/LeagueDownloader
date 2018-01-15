@@ -1,6 +1,8 @@
 # LeagueDownloader
 This is a tool that allows you to download and install any version from League of Legends using Riot's CDN.
 
+[Get the latest version](https://github.com/LoL-Fantome/LeagueDownloader/releases/)
+
 ### Download & install a solution
 A solution is usually composed of two projects: the main project and the "localization one" (e.g. *lol_game_client* which contains all game files and *lol_game_client_fr* which contains all french voices).
 
