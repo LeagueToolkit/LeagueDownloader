@@ -18,19 +18,26 @@ namespace LeagueDownloader
             public string Platform { get; set; }
         }
 
-        [Verb("install-solution", HelpText = "Install a complete solution.")]
+        [Verb("solution", HelpText = "Install a complete solution.")]
         class SolutionOptions : CommonOptions
         {
-
-        }
-
-        [Verb("install-project", HelpText = "Install a project.")]
-        class ProjectOptions : CommonOptions
-        {
-            [Option('n', "name", Required = true, HelpText = "Project name.")]
+            [Option('n', "name", Required = true, HelpText = "Solution name (e.g. lol_game_client_sln).")]
             public string Name { get; set; }
 
-            [Option('v', "version", Required = true, HelpText = "Project version.")]
+            [Option('v', "version", Required = true, HelpText = "Solution version (e.g. 0.0.1.68).")]
+            public string Version { get; set; }
+
+            [Option('l', "localization", Required = true, HelpText = "Localization (e.g. en_gb).")]
+            public string Localization { get; set; }
+        }
+
+        [Verb("project", HelpText = "Install a project.")]
+        class ProjectOptions : CommonOptions
+        {
+            [Option('n', "name", Required = true, HelpText = "Project name (e.g. lol_game_client).")]
+            public string Name { get; set; }
+
+            [Option('v', "version", Required = true, HelpText = "Project version (e.g. 0.0.1.7).")]
             public string Version { get; set; }
         }
 
@@ -45,15 +52,16 @@ namespace LeagueDownloader
 
         static int InstallSolution(SolutionOptions opts)
         {
+            var radsInstaller = new RADSInstaller(opts.OutputFolder, opts.Platform);
+            radsInstaller.InstallSolution(opts.Name, opts.Version, opts.Localization);
             return 1;
         }
 
         static int InstallProject(ProjectOptions opts)
         {
             var radsInstaller = new RADSInstaller(opts.OutputFolder, opts.Platform);
-            radsInstaller.InstallProject(opts.Name, opts.Version, "lol_game_client_sln", "0.0.1.100");
+            radsInstaller.InstallProject(opts.Name, opts.Version);
             return 1;
         }
-
     }
 }

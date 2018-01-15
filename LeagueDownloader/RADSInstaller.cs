@@ -9,6 +9,7 @@ using Fantome.Libraries.League.IO.ReleaseManifest;
 using Fantome.Libraries.League.IO.RiotArchive;
 using static Fantome.Libraries.League.IO.ReleaseManifest.ReleaseManifestFile.DeployMode;
 using System.IO.Compression;
+using LeagueDownloader.Solution;
 
 namespace LeagueDownloader
 {
@@ -27,9 +28,34 @@ namespace LeagueDownloader
             this.Platform = platform;
         }
 
+        public void InstallSolution(string solutionName, string solutionVersion, string localization)
+        {
+            // Downloading solution manifest
+            Console.WriteLine("Downloading solution manifest for release {0}", solutionVersion);
+            var solutionFolder = String.Format("{0}/RADS/solutions/{1}/releases/{2}", Directory, solutionName, solutionVersion);
+            System.IO.Directory.CreateDirectory(solutionFolder);
+            webClient.DownloadFile(
+                String.Format("{0}/releases/{1}/solutions/{2}/releases/{3}/solutionmanifest", LeagueCDN, Platform, solutionName, solutionVersion),
+                solutionFolder + "/solutionmanifest");
+            var solutionManifest = new SolutionManifest(File.ReadAllLines(solutionFolder + "/solutionmanifest"));
+            LocalizedEntry localizedEntry = solutionManifest.LocalizedEntries.Find(x => x.Name.Equals(localization, StringComparison.InvariantCultureIgnoreCase));
+            if (localizedEntry != null)
+            {
+                // Creating configuration manifest
+                var configurationManifest = new ConfigurationManifest(localizedEntry);
+                configurationManifest.Write(solutionFolder + "/configurationmanifest");
+
+                // Downloading each project
+                foreach (SolutionProject project in localizedEntry.Projects)
+                    InstallProject(project.Name, project.Version, solutionName, solutionVersion);
+
+                File.Create(solutionFolder + "/S_OK").Close();
+            }
+        }
+
         public void InstallProject(string projectName, string projectVersion, string solutionName = null, string solutionVersion = null)
         {
-            var projectsURL = String.Format("{0}/releases/{1}/projects/{2}/", LeagueCDN, Platform, projectName);
+            var projectsURL = String.Format("{0}/releases/{1}/projects/{2}", LeagueCDN, Platform, projectName);
 
             var projectFolder = String.Format("{0}/RADS/projects/{1}", Directory, projectName);
             var releaseFolder = String.Format("{0}/releases/{1}", projectFolder, projectVersion);
@@ -45,7 +71,7 @@ namespace LeagueDownloader
                 solutionDeployFolder = String.Format("{0}/RADS/solutions/{1}/releases/{2}/deploy", Directory, solutionName, solutionVersion);
 
             // Getting release manifest
-            Console.WriteLine("Downloading manifest...");
+            Console.WriteLine("Downloading manifest for project {0}, release {1}...", projectName, projectVersion);
             var currentProjectURL = String.Format("{0}/releases/{1}", projectsURL, projectVersion);
             webClient.DownloadFile(currentProjectURL + "/releasemanifest", releaseFolder + "/releasemanifest");
             var releaseManifest = new ReleaseManifestFile(releaseFolder + "/releasemanifest");
@@ -53,7 +79,7 @@ namespace LeagueDownloader
             // Downloading files
             var files = new List<ReleaseManifestFileEntry>();
             EnumerateManifestFolderFiles(releaseManifest.Project, files);
-            files.OrderBy(x => x.Version);
+            files.Sort((x, y) => (x.Version.CompareTo(y.Version)));
 
             string currentArchiveVersion = null;
             RAF currentRAF = null;
@@ -61,12 +87,19 @@ namespace LeagueDownloader
             {
                 string fileFullPath = file.GetFullPath();
                 string fileVersion = GetReleaseString(file.Version);
-                Console.WriteLine("Downloading file: {0}", fileFullPath);
-                var fileURL = String.Format("{0}/releases/{1}/files/{2}.compressed", projectsURL, fileVersion, fileFullPath);
+                Console.WriteLine("Downloading file {0}/{1}", fileVersion, fileFullPath);
+                bool compressed = false;
+                var fileURL = String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, fileFullPath);
+                if (file.DeployMode != Deployed0)
+                {
+                    fileURL += ".compressed";
+                    compressed = true;
+                }
+
                 byte[] fileData = webClient.DownloadData(fileURL);
                 if (file.DeployMode == RAFCompressed || file.DeployMode == RAFRaw)
                 {
-                    // File has to be in a RAF
+                    // File has to be put in a RAF
                     if (currentRAF == null || currentArchiveVersion != fileVersion)
                     {
                         currentRAF?.Save();
@@ -74,23 +107,28 @@ namespace LeagueDownloader
                         currentArchiveVersion = fileVersion;
                         currentRAF = new RAF(String.Format("{0}/{1}/Archive_1.raf", archivesFolder, fileVersion));
                     }
-                    currentRAF.AddFile(fileFullPath, file.DeployMode == RAFCompressed ? fileData : DecompressZlib(fileData), false);
+                    if (compressed)
+                        currentRAF.AddFile(fileFullPath, file.DeployMode == RAFCompressed ? fileData : DecompressZlib(fileData), false);
+                    else
+                        currentRAF.AddFile(fileFullPath, fileData, file.DeployMode == RAFCompressed);
                 }
                 else if (file.DeployMode == Managed)
                 {
+                    // File will be in managedfiles folder
                     var filePath = String.Format("{0}/{1}/{2}", managedFilesFolder, fileVersion, fileFullPath);
                     System.IO.Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                    File.WriteAllBytes(filePath, DecompressZlib(fileData));
+                    File.WriteAllBytes(filePath, compressed ? DecompressZlib(fileData) : fileData);
                 }
                 else if (file.DeployMode == Deployed0 || file.DeployMode == Deployed4)
                 {
+                    // File will be in deploy folder
                     var deployPath = String.Format("{0}/{1}", deployFolder, fileFullPath);
                     System.IO.Directory.CreateDirectory(Path.GetDirectoryName(deployPath));
-                    byte[] decompressedData = DecompressZlib(fileData);
+                    byte[] decompressedData = compressed ? DecompressZlib(fileData) : fileData;
                     File.WriteAllBytes(deployPath, decompressedData);
                     if (solutionDeployFolder != null && file.DeployMode == Deployed4)
                     {
-                        // Also deploy in solution
+                        // File will also be in solution folder
                         var solutionPath = String.Format("{0}/{1}", solutionDeployFolder, fileFullPath);
                         System.IO.Directory.CreateDirectory(Path.GetDirectoryName(solutionPath));
                         File.WriteAllBytes(solutionPath, decompressedData);
@@ -98,6 +136,7 @@ namespace LeagueDownloader
                 }
             }
             currentRAF?.Dispose();
+            File.Create(releaseFolder + "/S_OK").Close();
         }
 
         private static byte[] DecompressZlib(byte[] inputData)
