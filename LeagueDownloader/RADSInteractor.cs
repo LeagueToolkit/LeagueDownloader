@@ -11,6 +11,7 @@ using static Fantome.Libraries.League.IO.ReleaseManifest.ReleaseManifestFile.Dep
 using System.IO.Compression;
 using LeagueDownloader.Solution;
 using System.Web;
+using System.Threading;
 
 namespace LeagueDownloader
 {
@@ -80,6 +81,7 @@ namespace LeagueDownloader
             EnumerateManifestFolderFiles(releaseManifest.Project, files);
             files.Sort((x, y) => (x.Version.CompareTo(y.Version)));
 
+            var tasks = new List<Task>();
             string currentArchiveVersion = null;
             RAF currentRAF = null;
             foreach (ReleaseManifestFileEntry file in files)
@@ -95,57 +97,62 @@ namespace LeagueDownloader
                     compressed = true;
                 }
 
-                byte[] fileData;
+                byte[] fileData = null;
                 try
                 {
                     fileData = webClient.DownloadData(fileURL);
-                    // Change deploy mode if specified
-                    if (deployMode != null)
-                        file.DeployMode = (ReleaseManifestFile.DeployMode)deployMode;
-
-                    if (file.DeployMode == RAFCompressed || file.DeployMode == RAFRaw)
-                    {
-                        // File has to be put in a RAF
-                        if (currentRAF == null || currentArchiveVersion != fileVersion)
-                        {
-                            currentRAF?.Save();
-                            currentRAF?.Dispose();
-                            currentArchiveVersion = fileVersion;
-                            currentRAF = new RAF(String.Format("{0}/{1}/Archive_1.raf", archivesFolder, fileVersion));
-                        }
-                        if (compressed)
-                            currentRAF.AddFile(fileFullPath, file.DeployMode == RAFCompressed ? fileData : DecompressZlib(fileData), false);
-                        else
-                            currentRAF.AddFile(fileFullPath, fileData, file.DeployMode == RAFCompressed);
-                    }
-                    else if (file.DeployMode == Managed)
-                    {
-                        // File will be in managedfiles folder
-                        var filePath = String.Format("{0}/{1}/{2}", managedFilesFolder, fileVersion, fileFullPath);
-                        Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                        File.WriteAllBytes(filePath, compressed ? DecompressZlib(fileData) : fileData);
-                    }
-                    else if (file.DeployMode == Deployed0 || file.DeployMode == Deployed4)
-                    {
-                        // File will be in deploy folder
-                        var deployPath = String.Format("{0}/{1}", deployFolder, fileFullPath);
-                        Directory.CreateDirectory(Path.GetDirectoryName(deployPath));
-                        byte[] decompressedData = compressed ? DecompressZlib(fileData) : fileData;
-                        File.WriteAllBytes(deployPath, decompressedData);
-                        if (solutionDeployFolder != null && file.DeployMode == Deployed4)
-                        {
-                            // File will also be in solution folder
-                            var solutionPath = String.Format("{0}/{1}", solutionDeployFolder, fileFullPath);
-                            Directory.CreateDirectory(Path.GetDirectoryName(solutionPath));
-                            File.WriteAllBytes(solutionPath, decompressedData);
-                        }
-                    }
                 }
                 catch (WebException)
                 {
                     Console.WriteLine("Error when downloading file {0}/{1}", fileVersion, fileFullPath);
                 }
+                if (fileData != null)
+                    tasks.Add(Task.Run(new Action(delegate ()
+                    {
+                        // Change deploy mode if specified
+                        if (deployMode != null)
+                            file.DeployMode = (ReleaseManifestFile.DeployMode)deployMode;
+
+                        if (file.DeployMode == RAFCompressed || file.DeployMode == RAFRaw)
+                        {
+                            // File has to be put in a RAF
+                            if (currentRAF == null || currentArchiveVersion != fileVersion)
+                            {
+                                currentRAF?.Save();
+                                currentRAF?.Dispose();
+                                currentArchiveVersion = fileVersion;
+                                currentRAF = new RAF(String.Format("{0}/{1}/Archive_1.raf", archivesFolder, fileVersion));
+                            }
+                            if (compressed)
+                                currentRAF.AddFile(fileFullPath, file.DeployMode == RAFCompressed ? fileData : DecompressZlib(fileData), false);
+                            else
+                                currentRAF.AddFile(fileFullPath, fileData, file.DeployMode == RAFCompressed);
+                        }
+                        else if (file.DeployMode == Managed)
+                        {
+                            // File will be in managedfiles folder
+                            var filePath = String.Format("{0}/{1}/{2}", managedFilesFolder, fileVersion, fileFullPath);
+                            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+                            File.WriteAllBytes(filePath, compressed ? DecompressZlib(fileData) : fileData);
+                        }
+                        else if (file.DeployMode == Deployed0 || file.DeployMode == Deployed4)
+                        {
+                            // File will be in deploy folder
+                            var deployPath = String.Format("{0}/{1}", deployFolder, fileFullPath);
+                            Directory.CreateDirectory(Path.GetDirectoryName(deployPath));
+                            byte[] decompressedData = compressed ? DecompressZlib(fileData) : fileData;
+                            File.WriteAllBytes(deployPath, decompressedData);
+                            if (solutionDeployFolder != null && file.DeployMode == Deployed4)
+                            {
+                                // File will also be in solution folder
+                                var solutionPath = String.Format("{0}/{1}", solutionDeployFolder, fileFullPath);
+                                Directory.CreateDirectory(Path.GetDirectoryName(solutionPath));
+                                File.WriteAllBytes(solutionPath, decompressedData);
+                            }
+                        }
+                    })));
             }
+            Task.WaitAll(tasks.ToArray());
             currentRAF?.Dispose();
             releaseManifest.Save();
             File.Create(releaseFolder + "/S_OK").Close();
@@ -163,11 +170,10 @@ namespace LeagueDownloader
             var projectsURL = String.Format("{0}/releases/{1}/projects/{2}", LeagueCDN, Platform, projectName);
             List<ReleaseManifestFileEntry> files = EnumerateFiles(projectName, ref projectVersion, filter, filesRevision);
             Console.WriteLine("{0} files to download", files.Count);
+            var tasks = new List<Task>();
             foreach (ReleaseManifestFileEntry file in files)
             {
                 string fileFullPath = file.GetFullPath();
-                string fileOutputPath = String.Format("{0}/{1}/releases/{2}/{3}", directory, projectName, projectVersion, fileFullPath);
-                Directory.CreateDirectory(Path.GetDirectoryName(fileOutputPath));
                 string fileVersion = GetReleaseString(file.Version);
                 Console.WriteLine("Downloading file {0}/{1}", fileVersion, fileFullPath);
                 bool compressed = false;
@@ -177,20 +183,27 @@ namespace LeagueDownloader
                     fileURL += ".compressed";
                     compressed = true;
                 }
+                byte[] fileData = null;
                 try
                 {
-                    byte[] fileData = webClient.DownloadData(fileURL);
-                    if (compressed)
-                        fileData = DecompressZlib(fileData);
-                    File.WriteAllBytes(fileOutputPath, fileData);
+                    fileData = webClient.DownloadData(fileURL);
                 }
                 catch (WebException)
                 {
-
+                    Console.WriteLine("Error when downloading file {0}/{1}", fileVersion, fileFullPath);
                 }
+                if (fileData != null)
+                    tasks.Add(Task.Run(new Action(delegate ()
+                        {
+                            string fileOutputPath = String.Format("{0}/{1}/releases/{2}/{3}", directory, projectName, projectVersion, fileFullPath);
+                            Directory.CreateDirectory(Path.GetDirectoryName(fileOutputPath));
+                            if (compressed)
+                                fileData = DecompressZlib(fileData);
+                            File.WriteAllBytes(fileOutputPath, fileData);
+                        })));
             }
+            Task.WaitAll(tasks.ToArray());
         }
-
 
         private List<ReleaseManifestFileEntry> EnumerateFiles(string projectName, ref string projectVersion, string filter = null, string filesRevision = null)
         {
