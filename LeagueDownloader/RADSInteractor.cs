@@ -86,7 +86,7 @@ namespace LeagueDownloader
             {
                 string fileFullPath = file.GetFullPath();
                 string fileVersion = GetReleaseString(file.Version);
-                Console.WriteLine("Downloading file {0}/{1}", fileVersion, fileFullPath);
+                Console.Write("■ Downloading {0}/{1}", fileVersion, fileFullPath);
                 bool compressed = false;
                 var fileURL = String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, EncodeFilePath(fileFullPath));
                 if (file.SizeCompressed > 0)
@@ -140,11 +140,17 @@ namespace LeagueDownloader
                             File.WriteAllBytes(solutionPath, decompressedData);
                         }
                     }
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("■");
                 }
                 catch (WebException)
                 {
-                    Console.WriteLine("Error when downloading file {0}/{1}", fileVersion, fileFullPath);
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("■");
                 }
+                Console.ResetColor();
             }
             currentRAF?.Dispose();
             releaseManifest.Save();
@@ -169,7 +175,7 @@ namespace LeagueDownloader
                 string fileOutputPath = String.Format("{0}/{1}/releases/{2}/{3}", directory, projectName, projectVersion, fileFullPath);
                 Directory.CreateDirectory(Path.GetDirectoryName(fileOutputPath));
                 string fileVersion = GetReleaseString(file.Version);
-                Console.WriteLine("Downloading file {0}/{1}", fileVersion, fileFullPath);
+                Console.Write("■ Downloading {0}/{1}", fileVersion, fileFullPath);
                 bool compressed = false;
                 var fileURL = String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, EncodeFilePath(fileFullPath));
                 if (file.SizeCompressed > 0)
@@ -183,11 +189,23 @@ namespace LeagueDownloader
                     if (compressed)
                         fileData = DecompressZlib(fileData);
                     File.WriteAllBytes(fileOutputPath, fileData);
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("■");
                 }
                 catch (WebException)
                 {
-
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("■");
                 }
+                catch (Exception)
+                {
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("■");
+                }
+                Console.ResetColor();
             }
         }
 
