@@ -11,6 +11,7 @@ using static Fantome.Libraries.League.IO.ReleaseManifest.ReleaseManifestFile.Dep
 using System.IO.Compression;
 using LeagueDownloader.Solution;
 using System.Web;
+using System.Text.RegularExpressions;
 
 namespace LeagueDownloader
 {
@@ -232,10 +233,8 @@ namespace LeagueDownloader
             }
             if (filter != null)
             {
-                Predicate<ReleaseManifestFileEntry> predicate = x => x.GetFullPath().Equals(filter, StringComparison.InvariantCultureIgnoreCase);
-                if (filter.EndsWith("/"))
-                    predicate = x => (x.Folder.GetFullPath() + "/").StartsWith(filter, StringComparison.InvariantCultureIgnoreCase);
-                files = files.FindAll(predicate);
+                Regex regex = new Regex(filter);
+                files = files.FindAll(x => regex.IsMatch(x.GetFullPath()));
             }
             return files;
         }
