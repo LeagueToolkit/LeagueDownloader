@@ -145,7 +145,7 @@ namespace LeagueDownloader
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("■");
                 }
-                catch (WebException)
+                catch (Exception)
                 {
                     Console.SetCursorPosition(0, Console.CursorTop);
                     Console.ForegroundColor = ConsoleColor.Red;
@@ -192,12 +192,6 @@ namespace LeagueDownloader
                     File.WriteAllBytes(fileOutputPath, fileData);
                     Console.SetCursorPosition(0, Console.CursorTop);
                     Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("■");
-                }
-                catch (WebException)
-                {
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("■");
                 }
                 catch (Exception)
