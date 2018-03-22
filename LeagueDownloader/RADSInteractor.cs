@@ -89,7 +89,7 @@ namespace LeagueDownloader
                 string fileVersion = GetReleaseString(file.Version);
                 Console.Write("■ Downloading {0}/{1}", fileVersion, fileFullPath);
                 bool compressed = false;
-                var fileURL = String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, EncodeFilePath(fileFullPath));
+                var fileURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, fileFullPath));
                 if (file.SizeCompressed > 0)
                 {
                     fileURL += ".compressed";
@@ -178,7 +178,7 @@ namespace LeagueDownloader
                 string fileVersion = GetReleaseString(file.Version);
                 Console.Write("■ Downloading {0}/{1}", fileVersion, fileFullPath);
                 bool compressed = false;
-                var fileURL = String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, EncodeFilePath(fileFullPath));
+                var fileURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, fileFullPath));
                 if (file.SizeCompressed > 0)
                 {
                     fileURL += ".compressed";
@@ -266,16 +266,6 @@ namespace LeagueDownloader
                 }
             }
             return decompressedData;
-        }
-
-        private static string EncodeFilePath(string fileFullPath)
-        {
-            string[] split = fileFullPath.Split('/');
-            for (int i = 0; i < split.Length; i++)
-            {
-                split[i] = HttpUtility.UrlEncode(split[i]);
-            }
-            return String.Join("/", split);
         }
 
         private static void EnumerateManifestFolderFiles(ReleaseManifestFolderEntry folder, List<ReleaseManifestFileEntry> currentList)
