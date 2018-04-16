@@ -47,22 +47,25 @@ namespace LeagueDownloader
             public uint? DeployMode { get; set; }
         }
 
-        abstract class CommonListOptions
+        abstract class CommonSelectionOptions
         {
             [Option('n', "name", Required = true, HelpText = "Project name (e.g. lol_game_client).")]
             public string ProjectName { get; set; }
-
-            [Option('v', "version", Required = false, Default = "LATEST", HelpText = "Project version (e.g. 0.0.1.7).")]
-            public string ProjectVersion { get; set; }
-
-            [Option('r', "revision", Required = false, Default = null, HelpText = "Files revision (e.g. 0.0.1.7).")]
-            public string FilesRevision { get; set; }
 
             [Option('f', "filter", Required = false, Default = null, HelpText = "Files/Folder filter (e.g. LEVELS/Map1/env.ini or LEVELS/Map1/).")]
             public string Filter { get; set; }
 
             [Option('p', "platform", Default = "live", Required = false, HelpText = "Platform")]
             public string Platform { get; set; }
+        }
+
+        abstract class CommonListOptions : CommonSelectionOptions
+        {
+            [Option('v', "version", Required = false, Default = "LATEST", HelpText = "Project version (e.g. 0.0.1.7).")]
+            public string ProjectVersion { get; set; }
+
+            [Option('r', "revision", Required = false, Default = null, HelpText = "Files revision (e.g. 0.0.1.7).")]
+            public string FilesRevision { get; set; }
         }
 
         [Verb("list", HelpText = "List files.")]
@@ -75,14 +78,31 @@ namespace LeagueDownloader
             public string OutputFolder { get; set; }
         }
 
+        [Verb("range-download", HelpText = "Download files in a range of revisions.")]
+        class RangeDownloadOptions : CommonSelectionOptions
+        {
+            [Option('o', "output-folder", Default = null, Required = true, HelpText = "Output folder.")]
+            public string OutputFolder { get; set; }
+
+            [Option("start-revision", Required = false, Default = null, HelpText = "Files revision (e.g. 0.0.1.7).")]
+            public string StartRevision { get; set; }
+
+            [Option("end-revision", Required = false, Default = null, HelpText = "Files revision (e.g. 0.0.1.7).")]
+            public string EndRevision { get; set; }
+
+            [Option("ignore-older-files", Required = false, Default = false, HelpText = "Ignore files revised earlier than the specified start revision.")]
+            public bool IgnoreOlderFiles { get; set; }
+        }
+
         static void Main(string[] args)
         {
-            Parser.Default.ParseArguments<SolutionOptions, ProjectOptions, ListOptions, DownloadOptions>(args)
+            Parser.Default.ParseArguments<SolutionOptions, ProjectOptions, ListOptions, DownloadOptions, RangeDownloadOptions>(args)
               .MapResult(
                 (SolutionOptions opts) => InstallSolution(opts),
                 (ProjectOptions opts) => InstallProject(opts),
                 (ListOptions opts) => ListFiles(opts),
                 (DownloadOptions opts) => DownloadFiles(opts),
+                (RangeDownloadOptions opts) => RangeDownloadFiles(opts),
                 errs => 1);
         }
 
@@ -111,6 +131,13 @@ namespace LeagueDownloader
         {
             var radsInteractor = new RADSInteractor(opts.Platform);
             radsInteractor.DownloadFiles(opts.OutputFolder, opts.ProjectName, opts.ProjectVersion, opts.Filter, opts.FilesRevision);
+            return 1;
+        }
+
+        static int RangeDownloadFiles(RangeDownloadOptions opts)
+        {
+            var radsInteractor = new RADSInteractor(opts.Platform);
+            radsInteractor.RangeDownloadFiles(opts.OutputFolder, opts.ProjectName, opts.IgnoreOlderFiles, opts.Filter, opts.StartRevision, opts.EndRevision);
             return 1;
         }
     }

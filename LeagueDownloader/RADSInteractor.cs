@@ -174,36 +174,67 @@ namespace LeagueDownloader
             {
                 string fileFullPath = file.GetFullPath();
                 string fileOutputPath = String.Format("{0}/{1}/releases/{2}/{3}", directory, projectName, projectVersion, fileFullPath);
-                Directory.CreateDirectory(Path.GetDirectoryName(fileOutputPath));
-                string fileVersion = GetReleaseString(file.Version);
-                Console.Write("■ Downloading {0}/{1}", fileVersion, fileFullPath);
-                bool compressed = false;
-                var fileURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, fileFullPath));
-                if (file.SizeCompressed > 0)
-                {
-                    fileURL += ".compressed";
-                    compressed = true;
-                }
-                try
-                {
-                    byte[] fileData = webClient.DownloadData(fileURL);
-                    if (compressed)
-                        fileData = DecompressZlib(fileData);
-                    File.WriteAllBytes(fileOutputPath, fileData);
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("■");
-                }
-                catch (Exception)
-                {
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("■");
-                }
-                Console.ResetColor();
+                DownloadFile(file, fileOutputPath, fileFullPath, projectsURL);
             }
         }
 
+        public void RangeDownloadFiles(string directory, string projectName, bool ignoreOlderFiles = false, string filter = null, string startRevision = null, string endRevision = null)
+        {
+            var projectsURL = String.Format("{0}/releases/{1}/projects/{2}", LeagueCDN, Platform, projectName);
+
+            List<string> releases = GetReleases(projectName);
+            uint startRevisionValue = startRevision == null ? 0 : GetReleaseValue(startRevision);
+            uint endRevisionValue = endRevision == null ? GetReleaseValue(releases[0]) : GetReleaseValue(endRevision);
+
+            // Check if specified releases exist
+            startRevisionValue = Math.Max(startRevisionValue, GetReleaseValue(releases.Last()));
+            endRevisionValue = Math.Min(endRevisionValue, GetReleaseValue(releases[0]));
+
+            for (uint r = startRevisionValue; r <= endRevisionValue; r++)
+            {
+                string releaseString = GetReleaseString(r);
+                Console.WriteLine("Retrieving files list for revision " + releaseString);
+                List<ReleaseManifestFileEntry> files = EnumerateFiles(projectName, ref releaseString, filter, ignoreOlderFiles ? releaseString : null);
+                foreach (ReleaseManifestFileEntry fileEntry in files)
+                {
+                    string fileFullPath = fileEntry.GetFullPath();
+                    string fileOutputPath = String.Format("{0}/{1}/releases/{2}/{3}", directory, projectName, GetReleaseString(fileEntry.Version), fileFullPath);
+                    if (!File.Exists(fileOutputPath))
+                        DownloadFile(fileEntry, fileOutputPath, fileFullPath, projectsURL);
+                }
+            }
+        }
+
+        private void DownloadFile(ReleaseManifestFileEntry file, string fileOutputPath, string fileFullPath, string projectsURL)
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(fileOutputPath));
+            string fileVersion = GetReleaseString(file.Version);
+            Console.Write("■ Downloading {0}/{1}", fileVersion, fileFullPath);
+            bool compressed = false;
+            var fileURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectsURL, fileVersion, fileFullPath));
+            if (file.SizeCompressed > 0)
+            {
+                fileURL += ".compressed";
+                compressed = true;
+            }
+            try
+            {
+                byte[] fileData = webClient.DownloadData(fileURL);
+                if (compressed)
+                    fileData = DecompressZlib(fileData);
+                File.WriteAllBytes(fileOutputPath, fileData);
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("■");
+            }
+            catch (Exception)
+            {
+                Console.SetCursorPosition(0, Console.CursorTop);
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("■");
+            }
+            Console.ResetColor();
+        }
 
         private List<ReleaseManifestFileEntry> EnumerateFiles(string projectName, ref string projectVersion, string filter = null, string filesRevision = null)
         {
@@ -235,9 +266,20 @@ namespace LeagueDownloader
 
         private string GetLatestRelease(string projectName)
         {
+            return GetReleases(projectName)[0];
+        }
+
+        private List<string> GetReleases(string projectName)
+        {
+            var releases = new List<string>();
             var releaseListingURL = String.Format("{0}/releases/{1}/projects/{2}/releases/releaselisting", LeagueCDN, Platform, projectName);
             using (var sr = new StringReader(webClient.DownloadString(releaseListingURL)))
-                return sr.ReadLine();
+            {
+                string release;
+                while ((release = sr.ReadLine()) != null)
+                    releases.Add(release);
+            }
+            return releases;
         }
 
         private static byte[] DecompressZlib(byte[] inputData)
