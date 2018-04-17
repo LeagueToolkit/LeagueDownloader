@@ -12,6 +12,7 @@ using System.IO.Compression;
 using LeagueDownloader.Solution;
 using System.Web;
 using System.Text.RegularExpressions;
+using System.Security.Cryptography;
 
 namespace LeagueDownloader
 {
@@ -199,14 +200,19 @@ namespace LeagueDownloader
                 {
                     string fileFullPath = fileEntry.GetFullPath();
                     string fileOutputPath = String.Format("{0}/{1}/releases/{2}/{3}", directory, projectName, GetReleaseString(fileEntry.Version), fileFullPath);
-                    if (!File.Exists(fileOutputPath))
-                        DownloadFile(fileEntry, fileOutputPath, fileFullPath, projectsURL);
+                    DownloadFile(fileEntry, fileOutputPath, fileFullPath, projectsURL);
                 }
             }
         }
 
         private void DownloadFile(ReleaseManifestFileEntry file, string fileOutputPath, string fileFullPath, string projectsURL)
         {
+            if (File.Exists(fileOutputPath) && Enumerable.SequenceEqual(file.MD5, CalculateMD5(fileOutputPath)))
+            {
+                // File already downloaded and in perfect condition :)
+                return;
+            }
+
             Directory.CreateDirectory(Path.GetDirectoryName(fileOutputPath));
             string fileVersion = GetReleaseString(file.Version);
             Console.Write("■ Downloading {0}/{1}", fileVersion, fileFullPath);
@@ -219,10 +225,30 @@ namespace LeagueDownloader
             }
             try
             {
-                byte[] fileData = webClient.DownloadData(fileURL);
-                if (compressed)
-                    fileData = DecompressZlib(fileData);
-                File.WriteAllBytes(fileOutputPath, fileData);
+                // Check if file size is smaller than 50 MB.
+                // Small files are downloaded and decompressed in RAM.
+                // Big files are downloaded and compressed in and from a temp file to reduce RAM usage.
+                if (file.SizeRaw / (1048576) < 50)
+                {
+                    byte[] fileData = webClient.DownloadData(fileURL);
+                    if (compressed)
+                        fileData = DecompressZlib(fileData);
+                    File.WriteAllBytes(fileOutputPath, fileData);
+                }
+                else
+                {
+                    string downloadPath = fileOutputPath + ".dl";
+                    webClient.DownloadFile(fileURL, downloadPath);
+                    if (compressed)
+                    {
+                        DecompressZlib(downloadPath, fileOutputPath);
+                        File.Delete(downloadPath);
+                    }
+                    else
+                    {
+                        File.Move(downloadPath, fileOutputPath);
+                    }
+                }
                 Console.SetCursorPosition(0, Console.CursorTop);
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("■");
@@ -293,6 +319,28 @@ namespace LeagueDownloader
             return Inflate(data);
         }
 
+        private static void DecompressZlib(string compressedFilePath, string outputPath)
+        {
+            using (FileStream fs = File.OpenRead(compressedFilePath))
+            {
+                using (SubStream ss = new SubStream(fs, 2, fs.Length - 6))
+                {
+                    Inflate(ss, outputPath);
+                }
+            }
+        }
+
+        private static void Inflate(Stream compressedStream, string outputPath)
+        {
+            using (FileStream rawStream = new FileStream(outputPath, FileMode.Create))
+            {
+                using (DeflateStream decompressionStream = new DeflateStream(compressedStream, CompressionMode.Decompress))
+                {
+                    decompressionStream.CopyTo(rawStream);
+                }
+            }
+        }
+
         private static byte[] Inflate(byte[] compressedData)
         {
             byte[] decompressedData = null;
@@ -326,6 +374,17 @@ namespace LeagueDownloader
         {
             string[] releaseValues = releaseString.Split('.');
             return (uint)((Byte.Parse(releaseValues[0]) << 24) | (Byte.Parse(releaseValues[1]) << 16) | (Byte.Parse(releaseValues[2]) << 8) | Byte.Parse(releaseValues[3]));
+        }
+
+        private byte[] CalculateMD5(string filePath)
+        {
+            using (var md5 = MD5.Create())
+            {
+                using (var stream = File.OpenRead(filePath))
+                {
+                    return md5.ComputeHash(stream);
+                }
+            }
         }
     }
 }

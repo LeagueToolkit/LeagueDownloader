@@ -59,6 +59,7 @@
     <Compile Include="Solution\LocalizedEntry.cs" />
     <Compile Include="Solution\SolutionManifest.cs" />
     <Compile Include="Solution\SolutionProject.cs" />
+    <Compile Include="Utilities\SubStream.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
