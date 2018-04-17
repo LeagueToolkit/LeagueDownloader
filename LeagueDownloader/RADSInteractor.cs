@@ -195,7 +195,7 @@ namespace LeagueDownloader
             {
                 string releaseString = GetReleaseString(r);
                 Console.WriteLine("Retrieving files list for revision " + releaseString);
-                List<ReleaseManifestFileEntry> files = EnumerateFiles(projectName, ref releaseString, filter, ignoreOlderFiles ? releaseString : null);
+                List<ReleaseManifestFileEntry> files = EnumerateFiles(projectName, ref releaseString, filter, (r != startRevisionValue || ignoreOlderFiles) ? releaseString : null);
                 foreach (ReleaseManifestFileEntry fileEntry in files)
                 {
                     string fileFullPath = fileEntry.GetFullPath();
