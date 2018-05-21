@@ -71,3 +71,15 @@ Let's say you want to download all the files related to Zed from the revision ``
 range-download -n lol_game_client -o "C:/Zed" -f "DATA/Characters/Zed" --start-revision 0.0.1.10
 ```
 Letting ```ignore-older-files``` to its default value (```false```) will make the tool download earlier files if Zed files weren't changed by the revision ```0.0.1.10``` (so that you still get files that the game would have at version ```0.0.1.10``` even though they were revised earlier).
+
+### Discord
+Need some help to use this tool? Want to contribute? If you want to talk to the developers or other people in the community, join our discord server:
+
+<table>
+  <tbody>
+    <tr>
+      <td><img width=64 height=64 src="https://cdn.worldvectorlogo.com/logos/discord.svg"></td>
+      <td><h1>https://discord.gg/SUHpgaF</h1></td>
+    </tr>
+  </tbody>
+</table> 
