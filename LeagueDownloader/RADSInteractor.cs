@@ -20,14 +20,11 @@ namespace LeagueDownloader
     {
         public string LeagueCDNBaseURL { get; private set; }
 
-        public string Platform { get; private set; }
-
         private WebClient webClient = new WebClient();
 
-        public RADSInteractor(string cdnBaseURL, string platform)
+        public RADSInteractor(string cdnBaseURL)
         {
             this.LeagueCDNBaseURL = cdnBaseURL;
-            this.Platform = platform;
         }
 
         public void InstallSolution(string directory, string solutionName, string solutionVersion, string localization, uint? deployMode)
@@ -37,7 +34,7 @@ namespace LeagueDownloader
             var solutionFolder = String.Format("{0}/RADS/solutions/{1}/releases/{2}", directory, solutionName, solutionVersion);
             System.IO.Directory.CreateDirectory(solutionFolder);
             webClient.DownloadFile(
-                String.Format("{0}/releases/{1}/solutions/{2}/releases/{3}/solutionmanifest", LeagueCDNBaseURL, Platform, solutionName, solutionVersion),
+                String.Format("{0}/solutions/{1}/releases/{2}/solutionmanifest", LeagueCDNBaseURL, solutionName, solutionVersion),
                 solutionFolder + "/solutionmanifest");
             var solutionManifest = new SolutionManifest(File.ReadAllLines(solutionFolder + "/solutionmanifest"));
             LocalizedEntry localizedEntry = solutionManifest.LocalizedEntries.Find(x => x.Name.Equals(localization, StringComparison.InvariantCultureIgnoreCase));
@@ -57,7 +54,7 @@ namespace LeagueDownloader
 
         public void InstallProject(string directory, string projectName, string projectVersion, uint? deployMode, string solutionName = null, string solutionVersion = null)
         {
-            var projectsURL = String.Format("{0}/releases/{1}/projects/{2}", LeagueCDNBaseURL, Platform, projectName);
+            var projectsURL = String.Format("{0}/projects/{1}", LeagueCDNBaseURL, projectName);
 
             var projectFolder = String.Format("{0}/RADS/projects/{1}", directory, projectName);
             var releaseFolder = String.Format("{0}/releases/{1}", projectFolder, projectVersion);
@@ -156,7 +153,7 @@ namespace LeagueDownloader
                 Console.ResetColor();
             }
             currentRAF?.Dispose();
-            releaseManifest.Save();
+            releaseManifest.Write(releaseFolder + "/releasemanifest");
             File.Create(releaseFolder + "/S_OK").Close();
         }
 
@@ -169,7 +166,7 @@ namespace LeagueDownloader
 
         public void DownloadFiles(string directory, string projectName, string projectVersion, string filter = null, string filesRevision = null, bool saveManifest = false)
         {
-            var projectsURL = String.Format("{0}/releases/{1}/projects/{2}", LeagueCDNBaseURL, Platform, projectName);
+            var projectsURL = String.Format("{0}/projects/{1}", LeagueCDNBaseURL, projectName);
             List<ReleaseManifestFileEntry> files = EnumerateFiles(projectName, ref projectVersion, filter, filesRevision, saveManifest ? directory : null);
             Console.WriteLine("{0} files to download", files.Count);
             foreach (ReleaseManifestFileEntry file in files)
@@ -182,7 +179,7 @@ namespace LeagueDownloader
 
         public void RangeDownloadFiles(string directory, string projectName, bool ignoreOlderFiles = false, string filter = null, string startRevision = null, string endRevision = null, bool saveManifest = false)
         {
-            var projectsURL = String.Format("{0}/releases/{1}/projects/{2}", LeagueCDNBaseURL, Platform, projectName);
+            var projectsURL = String.Format("{0}/projects/{1}", LeagueCDNBaseURL, projectName);
 
             List<string> releases = GetReleases(projectName);
             uint startRevisionValue = startRevision == null ? 0 : GetReleaseValue(startRevision);
@@ -238,7 +235,7 @@ namespace LeagueDownloader
                 }
                 else
                 {
-                    string downloadPath = fileOutputPath + ".dl";
+                    string downloadPath = "temp";
                     webClient.DownloadFile(fileURL, downloadPath);
                     if (compressed)
                     {
@@ -271,18 +268,16 @@ namespace LeagueDownloader
             if (filesRevision == "LATEST")
                 filesRevision = projectVersion;
 
-            var releaseURL = String.Format("{0}/releases/{1}/projects/{2}/releases/{3}", LeagueCDNBaseURL, Platform, projectName, projectVersion);
+            var releaseURL = String.Format("{0}/projects/{1}/releases/{2}", LeagueCDNBaseURL, projectName, projectVersion);
+            byte[] manifestData = webClient.DownloadData(releaseURL + "/releasemanifest");
+            var releaseManifest = new ReleaseManifestFile(new MemoryStream(manifestData));
 
-            string manifestPath = "tempmanifest";
             if (manifestOutputFolder != null)
             {
-                manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", manifestOutputFolder, projectName, projectVersion);
+                var manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", manifestOutputFolder, projectName, projectVersion);
                 Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
+                releaseManifest.Write(manifestPath);
             }
-            webClient.DownloadFile(releaseURL + "/releasemanifest", manifestPath);
-            var releaseManifest = new ReleaseManifestFile(manifestPath);
-            if (manifestPath == "tempmanifest")
-                File.Delete("tempmanifest");
 
             var files = new List<ReleaseManifestFileEntry>();
             EnumerateManifestFolderFiles(releaseManifest.Project, files);
@@ -307,7 +302,7 @@ namespace LeagueDownloader
         private List<string> GetReleases(string projectName)
         {
             var releases = new List<string>();
-            var releaseListingURL = String.Format("{0}/releases/{1}/projects/{2}/releases/releaselisting", LeagueCDNBaseURL, Platform, projectName);
+            var releaseListingURL = String.Format("{0}/projects/{1}/releases/releaselisting", LeagueCDNBaseURL, projectName);
             using (var sr = new StringReader(webClient.DownloadString(releaseListingURL)))
             {
                 string release;
