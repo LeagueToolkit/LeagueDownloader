@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace LeagueDownloader
 {
@@ -24,10 +25,10 @@ namespace LeagueDownloader
             [Option('n', "name", Required = true, HelpText = "Solution name (e.g. lol_game_client_sln).")]
             public string Name { get; set; }
 
-            [Option('v', "version", Required = true, HelpText = "Solution version (e.g. 0.0.1.68).")]
+            [Option('v', "version", Required = false, Default = "LATEST", HelpText = "Solution version (e.g. 0.0.1.68).")]
             public string Version { get; set; }
 
-            [Option('l', "localization", Required = true, HelpText = "Localization (e.g. en_gb).")]
+            [Option('l', "localization", Required = false, Default = "en_gb", HelpText = "Localization (e.g. en_gb).")]
             public string Localization { get; set; }
 
             [Option('d', "deploy-mode", Required = false, Default = null, HelpText = "Forced deploy mode.")]
@@ -40,7 +41,7 @@ namespace LeagueDownloader
             [Option('n', "name", Required = true, HelpText = "Project name (e.g. lol_game_client).")]
             public string Name { get; set; }
 
-            [Option('v', "version", Required = true, HelpText = "Project version (e.g. 0.0.1.7).")]
+            [Option('v', "version", Required = false, Default = "LATEST", HelpText = "Project version (e.g. 0.0.1.7).")]
             public string Version { get; set; }
 
             [Option('d', "deploy-mode", Required = false, Default = null, HelpText = "Forced deploy mode.")]
@@ -100,8 +101,14 @@ namespace LeagueDownloader
             public bool SaveManifest { get; set; }
         }
 
+        static void Initialize()
+        {
+            Directory.CreateDirectory("temp");
+        }
+
         static void Main(string[] args)
         {
+            Initialize();
             Parser.Default.ParseArguments<SolutionOptions, ProjectOptions, ListOptions, DownloadOptions, RangeDownloadOptions>(args)
               .MapResult(
                 (SolutionOptions opts) => InstallSolution(opts),

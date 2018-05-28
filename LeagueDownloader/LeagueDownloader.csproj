@@ -52,6 +52,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Content\AssetContent.cs" />
+    <Compile Include="Content\RemoteAsset.cs" />
     <Compile Include="Solution\ConfigurationManifest.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -59,6 +61,7 @@
     <Compile Include="Solution\LocalizedEntry.cs" />
     <Compile Include="Solution\SolutionManifest.cs" />
     <Compile Include="Solution\SolutionProject.cs" />
+    <Compile Include="Utilities.cs" />
     <Compile Include="Utilities\SubStream.cs" />
   </ItemGroup>
   <ItemGroup>
