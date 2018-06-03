@@ -107,20 +107,31 @@ namespace LeagueDownloader
                                 raf.Dispose();
                             currentRAFs.Clear();
                             currentArchiveVersion = remoteAsset.StringVersion;
-                            currentRAFs.Add(new RAF(String.Format("{0}/{1}/Archive_1.raf", archivesFolder, remoteAsset.StringVersion)));
-                            int rafId = 2;
-                            string extraRAFPath;
-                            while (File.Exists(extraRAFPath = String.Format("{0}/{1}/Archive_{2}.raf", archivesFolder, remoteAsset.StringVersion, rafId)))
+                            foreach (string rafFile in Directory.EnumerateFiles(String.Format("{0}/{1}", archivesFolder, remoteAsset.StringVersion), "*.raf"))
+                                currentRAFs.Add(new RAF(rafFile));
+                            if (!currentRAFs.Any())
+                                currentRAFs.Add(new RAF(String.Format("{0}/{1}/Archive_1.raf", archivesFolder, remoteAsset.StringVersion)));
+                        }
+                        // Check if file is already in a RAF and in good shape
+                        bool fileAlreadyDownloaded = false;
+                        foreach (RAF raf in currentRAFs)
+                        {
+                            RAFFileEntry fileEntry = raf.Files.Find(x => x.Path.Equals(remoteAsset.FileFullPath, StringComparison.InvariantCultureIgnoreCase));
+                            if (fileEntry != null)
                             {
-                                currentRAFs.Add(new RAF(extraRAFPath));
-                                rafId++;
+                                if (!Enumerable.SequenceEqual(file.MD5, CalculateMD5(fileEntry.GetContent(file.DeployMode == RAFCompressed))))
+                                {
+                                    raf.Files.Remove(fileEntry);
+                                }
+                                else
+                                {
+                                    fileAlreadyDownloaded = true;
+                                    break;
+                                }
                             }
                         }
-                        // Check if file is already in a RAF
-                        if (!currentRAFs.Any(r => r.Files.Exists(x => x.Path.Equals(remoteAsset.FileFullPath, StringComparison.InvariantCultureIgnoreCase))))
-                        {
+                        if (!fileAlreadyDownloaded)
                             currentRAFs[0].AddFile(remoteAsset.FileFullPath, assetContent.GetAssetData(file.DeployMode == RAFCompressed), false);
-                        }
                     }
                     else if (file.DeployMode == Managed)
                     {

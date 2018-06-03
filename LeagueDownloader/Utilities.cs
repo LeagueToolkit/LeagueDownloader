@@ -90,5 +90,16 @@ namespace LeagueDownloader
                 }
             }
         }
+
+        public static byte[] CalculateMD5(byte[] fileData)
+        {
+            using (var md5 = MD5.Create())
+            {
+                using (var stream = new MemoryStream(fileData))
+                {
+                    return md5.ComputeHash(stream);
+                }
+            }
+        }
     }
 }
