@@ -84,7 +84,7 @@ namespace LeagueDownloader
             files.Sort((x, y) => (x.Version.CompareTo(y.Version)));
 
             string currentArchiveVersion = null;
-            RAF currentRAF = null;
+            var currentRAFs = new List<RAF>();
             foreach (ReleaseManifestFileEntry file in files)
             {
                 var remoteAsset = new RemoteAsset(file, projectsURL, webClient);
@@ -99,24 +99,34 @@ namespace LeagueDownloader
                     if (file.DeployMode == RAFCompressed || file.DeployMode == RAFRaw)
                     {
                         // File has to be put in a RAF
-                        if (currentRAF == null || currentArchiveVersion != remoteAsset.StringVersion)
+                        if (!currentRAFs.Any() || currentArchiveVersion != remoteAsset.StringVersion)
                         {
-                            currentRAF?.Save();
-                            currentRAF?.Dispose();
+                            if (currentRAFs.Any())
+                                currentRAFs[0]?.Save();
+                            foreach (RAF raf in currentRAFs)
+                                raf.Dispose();
+                            currentRAFs.Clear();
                             currentArchiveVersion = remoteAsset.StringVersion;
-                            currentRAF = new RAF(String.Format("{0}/{1}/Archive_1.raf", archivesFolder, remoteAsset.StringVersion));
+                            currentRAFs.Add(new RAF(String.Format("{0}/{1}/Archive_1.raf", archivesFolder, remoteAsset.StringVersion)));
+                            int rafId = 2;
+                            string extraRAFPath;
+                            while (File.Exists(extraRAFPath = String.Format("{0}/{1}/Archive_{2}.raf", archivesFolder, remoteAsset.StringVersion, rafId)))
+                            {
+                                currentRAFs.Add(new RAF(extraRAFPath));
+                                rafId++;
+                            }
                         }
-                        // Check if file is already in RAF
-                        if (!currentRAF.Files.Exists(x => x.Path.Equals(remoteAsset.FileFullPath, StringComparison.InvariantCultureIgnoreCase)))
+                        // Check if file is already in a RAF
+                        if (!currentRAFs.Any(r => r.Files.Exists(x => x.Path.Equals(remoteAsset.FileFullPath, StringComparison.InvariantCultureIgnoreCase))))
                         {
-                            currentRAF.AddFile(remoteAsset.FileFullPath, assetContent.GetAssetData(file.DeployMode == RAFCompressed), false);
+                            currentRAFs[0].AddFile(remoteAsset.FileFullPath, assetContent.GetAssetData(file.DeployMode == RAFCompressed), false);
                         }
                     }
                     else if (file.DeployMode == Managed)
                     {
                         // File will be in managedfiles folder
                         var filePath = String.Format("{0}/{1}/{2}", managedFilesFolder, remoteAsset.StringVersion, remoteAsset.FileFullPath);
-                        if (!File.Exists(filePath))
+                        if (!File.Exists(filePath) || !Enumerable.SequenceEqual(file.MD5, CalculateMD5(filePath)))
                         {
                             Directory.CreateDirectory(Path.GetDirectoryName(filePath));
                             assetContent.WriteAssetToFile(filePath, false);
@@ -126,7 +136,7 @@ namespace LeagueDownloader
                     {
                         // File will be in deploy folder
                         var deployPath = String.Format("{0}/{1}", deployFolder, remoteAsset.FileFullPath);
-                        if (!File.Exists(deployPath))
+                        if (!File.Exists(deployPath) || !Enumerable.SequenceEqual(file.MD5, CalculateMD5(deployPath)))
                         {
                             Directory.CreateDirectory(Path.GetDirectoryName(deployPath));
                             assetContent.WriteAssetToFile(deployPath, false);
@@ -135,7 +145,7 @@ namespace LeagueDownloader
                         {
                             // File will also be in solution folder
                             var solutionPath = String.Format("{0}/{1}", solutionDeployFolder, remoteAsset.FileFullPath);
-                            if (!File.Exists(solutionPath))
+                            if (!File.Exists(solutionPath) || !Enumerable.SequenceEqual(file.MD5, CalculateMD5(solutionPath)))
                             {
                                 Directory.CreateDirectory(Path.GetDirectoryName(solutionPath));
                                 File.Copy(deployPath, solutionPath);
@@ -154,7 +164,8 @@ namespace LeagueDownloader
                 }
                 Console.ResetColor();
             }
-            currentRAF?.Dispose();
+            foreach (RAF raf in currentRAFs)
+                raf.Dispose();
             releaseManifest.Write(releaseFolder + "/releasemanifest");
             File.Create(releaseFolder + "/S_OK").Close();
         }
