@@ -15,7 +15,7 @@ namespace LeagueDownloader
             [Option('o', "output-folder", Default = null, Required = true, HelpText = "Output folder.")]
             public string OutputFolder { get; set; }
 
-            [Option('u', "cdn-url", Default = "http://l3cdn.riotgames.com/releases/live", Required = false, HelpText = "CDN url to use.")]
+            [Option('u', "cdn-url", Default = "http://akacdn.riotgames.com/releases/live", Required = false, HelpText = "CDN url to use.")]
             public string CDNBaseURL { get; set; }
         }
 
@@ -56,7 +56,7 @@ namespace LeagueDownloader
             [Option('f', "filter", Required = false, Default = null, HelpText = "Files/Folder filter (e.g. LEVELS/Map1/env.ini or LEVELS/Map1/).")]
             public string Filter { get; set; }
 
-            [Option('u', "cdn-url", Default = "http://l3cdn.riotgames.com/releases/live", Required = false, HelpText = "CDN url to use.")]
+            [Option('u', "cdn-url", Default = "http://akacdn.riotgames.com/releases/live", Required = false, HelpText = "CDN url to use.")]
             public string CDNBaseURL { get; set; }
         }
 

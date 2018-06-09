@@ -107,6 +107,7 @@ namespace LeagueDownloader
                                 raf.Dispose();
                             currentRAFs.Clear();
                             currentArchiveVersion = remoteAsset.StringVersion;
+                            Directory.CreateDirectory(String.Format("{0}/{1}", archivesFolder, remoteAsset.StringVersion));
                             foreach (string rafFile in Directory.EnumerateFiles(String.Format("{0}/{1}", archivesFolder, remoteAsset.StringVersion), "*.raf"))
                                 currentRAFs.Add(new RAF(rafFile));
                             if (!currentRAFs.Any())
