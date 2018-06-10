@@ -28,7 +28,7 @@ namespace LeagueDownloader
             [Option('v', "version", Required = false, Default = Constants.LatestVersionString, HelpText = "Solution version (e.g. 0.0.1.68).")]
             public string Version { get; set; }
 
-            [Option('l', "localization", Required = false, Default = "en_gb", HelpText = "Localization (e.g. en_gb).")]
+            [Option('l', "localization", Required = false, Default = Constants.DefaultLocalization, HelpText = "Localization (e.g. en_gb).")]
             public string Localization { get; set; }
 
             [Option('d', "deploy-mode", Required = false, Default = null, HelpText = "Forced deploy mode.")]
