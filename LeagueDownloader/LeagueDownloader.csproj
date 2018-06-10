@@ -52,6 +52,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants.cs" />
     <Compile Include="Content\AssetContent.cs" />
     <Compile Include="Content\RemoteAsset.cs" />
     <Compile Include="Solution\ConfigurationManifest.cs" />

@@ -27,7 +27,7 @@ namespace LeagueDownloader
         public void InstallSolution(string directory, string solutionName, string solutionVersion, string localization, uint? deployMode)
         {
             // Downloading solution manifest
-            if (solutionVersion == "LATEST")
+            if (solutionVersion.Equals(Constants.LatestVersionString))
                 solutionVersion = GetLatestSolutionRelease(solutionName);
 
             Console.WriteLine("Downloading solution manifest for release {0}", solutionVersion);
@@ -56,7 +56,7 @@ namespace LeagueDownloader
         {
             var projectsURL = String.Format("{0}/projects/{1}", LeagueCDNBaseURL, projectName);
 
-            if (projectVersion == "LATEST")
+            if (projectVersion.Equals(Constants.LatestVersionString))
                 projectVersion = GetLatestProjectRelease(projectName);
 
             var projectFolder = String.Format("{0}/RADS/projects/{1}", directory, projectName);
@@ -255,10 +255,10 @@ namespace LeagueDownloader
 
         private List<ReleaseManifestFileEntry> EnumerateFiles(string projectName, ref string projectVersion, string filter = null, string filesRevision = null, string manifestOutputFolder = null)
         {
-            if (projectVersion == "LATEST")
+            if (projectVersion.Equals(Constants.LatestVersionString))
                 projectVersion = GetLatestProjectRelease(projectName);
 
-            if (filesRevision == "LATEST")
+            if (filesRevision.Equals(Constants.LatestVersionString))
                 filesRevision = projectVersion;
 
             var releaseURL = String.Format("{0}/projects/{1}/releases/{2}", LeagueCDNBaseURL, projectName, projectVersion);
