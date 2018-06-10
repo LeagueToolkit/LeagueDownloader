@@ -25,7 +25,7 @@ namespace LeagueDownloader
             [Option('n', "name", Required = true, HelpText = "Solution name (e.g. lol_game_client_sln).")]
             public string Name { get; set; }
 
-            [Option('v', "version", Required = false, Default = "LATEST", HelpText = "Solution version (e.g. 0.0.1.68).")]
+            [Option('v', "version", Required = false, Default = Constants.LatestVersionString, HelpText = "Solution version (e.g. 0.0.1.68).")]
             public string Version { get; set; }
 
             [Option('l', "localization", Required = false, Default = "en_gb", HelpText = "Localization (e.g. en_gb).")]
@@ -41,7 +41,7 @@ namespace LeagueDownloader
             [Option('n', "name", Required = true, HelpText = "Project name (e.g. lol_game_client).")]
             public string Name { get; set; }
 
-            [Option('v', "version", Required = false, Default = "LATEST", HelpText = "Project version (e.g. 0.0.1.7).")]
+            [Option('v', "version", Required = false, Default = Constants.LatestVersionString, HelpText = "Project version (e.g. 0.0.1.7).")]
             public string Version { get; set; }
 
             [Option('d', "deploy-mode", Required = false, Default = null, HelpText = "Forced deploy mode.")]
@@ -62,7 +62,7 @@ namespace LeagueDownloader
 
         abstract class CommonListOptions : CommonSelectionOptions
         {
-            [Option('v', "version", Required = false, Default = "LATEST", HelpText = "Project version (e.g. 0.0.1.7).")]
+            [Option('v', "version", Required = false, Default = Constants.LatestVersionString, HelpText = "Project version (e.g. 0.0.1.7).")]
             public string ProjectVersion { get; set; }
 
             [Option('r', "revision", Required = false, Default = null, HelpText = "Files revision (e.g. 0.0.1.7).")]
