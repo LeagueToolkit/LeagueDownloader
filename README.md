@@ -19,7 +19,7 @@ Mandatory parameters:
 Optional parameters:
   * ```-v <solution_version>```: the version of the solution you want to download (set to the latest released version by default).
   * ```-l <localization>```: the localization of the solution (e.g. ```en_gb```, ```fr_fr```) (set to ```en_gb``` by default).
-  * ```-u <cdn_url>```: the base URL of a RADS CDN (e.g. ```http://akacdn.riotgames.com/releases/pbe```) (set to Riot's default CDN pointing to the live platform: ```http://akacdn.riotgames.com/releases/live```).
+  * ```-u <cdn_url>```: the base URL of a RADS CDN (e.g. ```http://akacdn.riotgames.com/releases/pbe```) (set by default to Riot's CDN pointing to the live platform: ```http://akacdn.riotgames.com/releases/live```).
   * ```-d <deploy-mode>```: allows you to override the deploy mode specified in the original game manifests. It can be used if you want all the downloaded files to be installed using a unique deploy mode. Here is what you need to enter:
 
 | Deploy mode                    | Parameter |
