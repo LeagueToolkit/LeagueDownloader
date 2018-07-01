@@ -9,12 +9,12 @@ namespace LeagueDownloader.Solution
 {
     public class ConfigurationManifest
     {
-        private static readonly string Header = "RADS Configuration Manifest";
+        private const string Header = "RADS Configuration Manifest";
 
         public string ManifestVersion { get; private set; }
-        public LocalizedEntry LocalizedEntry { get; private set; }
+        public SolutionManifestLocalizedEntry LocalizedEntry { get; private set; }
 
-        public ConfigurationManifest(LocalizedEntry localizedEntry, String manifestVersion = "1.0.0.0")
+        public ConfigurationManifest(SolutionManifestLocalizedEntry localizedEntry, String manifestVersion = "1.0.0.0")
         {
             ManifestVersion = manifestVersion;
             LocalizedEntry = localizedEntry;
@@ -28,7 +28,7 @@ namespace LeagueDownloader.Solution
                 sw.WriteLine(ManifestVersion);
                 sw.WriteLine(LocalizedEntry.Name);
                 sw.WriteLine(LocalizedEntry.Projects.Count);
-                foreach (SolutionProject project in LocalizedEntry.Projects)
+                foreach (SolutionManifestProjectEntry project in LocalizedEntry.Projects)
                     sw.WriteLine(project.Name);
             }
         }

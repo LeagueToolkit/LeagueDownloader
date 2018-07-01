@@ -31,25 +31,15 @@ namespace LeagueDownloader
                 solutionVersion = GetLatestSolutionRelease(solutionName);
 
             Console.WriteLine("Downloading solution manifest for release {0}", solutionVersion);
-            var solutionFolder = String.Format("{0}/RADS/solutions/{1}/releases/{2}", directory, solutionName, solutionVersion);
-            System.IO.Directory.CreateDirectory(solutionFolder);
-            webClient.DownloadFile(
-                String.Format("{0}/solutions/{1}/releases/{2}/solutionmanifest", LeagueCDNBaseURL, solutionName, solutionVersion),
-                solutionFolder + "/solutionmanifest");
-            var solutionManifest = new SolutionManifest(File.ReadAllLines(solutionFolder + "/solutionmanifest"));
-            LocalizedEntry localizedEntry = solutionManifest.LocalizedEntries.Find(x => x.Name.Equals(localization, StringComparison.InvariantCultureIgnoreCase));
-            if (localizedEntry != null)
-            {
-                // Creating configuration manifest
-                var configurationManifest = new ConfigurationManifest(localizedEntry);
-                configurationManifest.Write(solutionFolder + "/configurationmanifest");
+            SolutionRelease solutionRelease = new SolutionRelease(solutionName, solutionVersion, LeagueCDNBaseURL);
 
-                // Downloading each project
-                foreach (SolutionProject project in localizedEntry.Projects)
-                    InstallProject(directory, project.Name, project.Version, deployMode, solutionName, solutionVersion);
+            SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization);
 
-                File.Create(solutionFolder + "/S_OK").Close();
-            }
+            // Download each project
+            foreach (SolutionManifestProjectEntry project in solutionReleaseInstallation.LocalizedEntry.Projects)
+                InstallProject(directory, project.Name, project.Version, deployMode, solutionName, solutionVersion);
+
+            solutionReleaseInstallation.ValdateInstallation();
         }
 
         public void InstallProject(string directory, string projectName, string projectVersion, uint? deployMode, string solutionName = null, string solutionVersion = null)

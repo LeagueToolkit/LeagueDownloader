@@ -59,9 +59,11 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RADSInteractor.cs" />
-    <Compile Include="Solution\LocalizedEntry.cs" />
+    <Compile Include="Solution\SolutionReleaseInstallation.cs" />
+    <Compile Include="Solution\SolutionManifestLocalizedEntry.cs" />
     <Compile Include="Solution\SolutionManifest.cs" />
-    <Compile Include="Solution\SolutionProject.cs" />
+    <Compile Include="Solution\SolutionManifestProjectEntry.cs" />
+    <Compile Include="Solution\SolutionRelease.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="Utilities\SubStream.cs" />
   </ItemGroup>

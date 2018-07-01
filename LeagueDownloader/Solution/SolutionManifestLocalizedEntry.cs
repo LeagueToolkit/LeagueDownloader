@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace LeagueDownloader.Solution
 {
-    public class LocalizedEntry
+    public class SolutionManifestLocalizedEntry
     {
         public string Name { get; private set; }
         public int Unknown { get; private set; }
-        public List<SolutionProject> Projects { get; private set; }
+        public List<SolutionManifestProjectEntry> Projects { get; private set; }
 
-        public LocalizedEntry(string name, int unknown, List<SolutionProject> projects)
+        public SolutionManifestLocalizedEntry(string name, int unknown, List<SolutionManifestProjectEntry> projects)
         {
             Name = name;
             Unknown = unknown;
