@@ -7,7 +7,7 @@ using System.IO;
 
 namespace LeagueDownloader.Solution
 {
-    public class SolutionReleaseInstallation
+    public class SolutionReleaseInstallation : IDisposable
     {
         public SolutionRelease SolutionRelease { get; private set; }
         public SolutionManifestLocalizedEntry LocalizedEntry { get; private set; }
@@ -29,7 +29,7 @@ namespace LeagueDownloader.Solution
             configurationManifest.Write(InstallationDirectory + "/configurationmanifest");
         }
 
-        public void ValdateInstallation()
+        public void Dispose()
         {
             File.Create(InstallationDirectory + "/S_OK").Close();
         }

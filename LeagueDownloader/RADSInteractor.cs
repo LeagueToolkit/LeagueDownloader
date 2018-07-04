@@ -7,8 +7,9 @@ using System.Text.RegularExpressions;
 using Fantome.Libraries.League.IO.ReleaseManifest;
 using Fantome.Libraries.League.IO.RiotArchive;
 using static Fantome.Libraries.League.IO.ReleaseManifest.ReleaseManifestFile.DeployMode;
-using LeagueDownloader.Solution;
 using static LeagueDownloader.Utilities;
+using LeagueDownloader.Solution;
+using LeagueDownloader.Project;
 using LeagueDownloader.Content;
 
 namespace LeagueDownloader
@@ -26,150 +27,49 @@ namespace LeagueDownloader
 
         public void InstallSolution(string directory, string solutionName, string solutionVersion, string localization, uint? deployMode)
         {
-            // Downloading solution manifest
             if (String.Equals(solutionVersion, Constants.LatestVersionString))
                 solutionVersion = GetLatestSolutionRelease(solutionName);
 
             Console.WriteLine("Downloading solution manifest for release {0}", solutionVersion);
-            SolutionRelease solutionRelease = new SolutionRelease(solutionName, solutionVersion, LeagueCDNBaseURL);
+            SolutionRelease solutionRelease = new SolutionRelease(solutionName, solutionVersion, this.LeagueCDNBaseURL);
 
-            SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization);
-
-            // Download each project
-            foreach (SolutionManifestProjectEntry project in solutionReleaseInstallation.LocalizedEntry.Projects)
-                InstallProject(directory, project.Name, project.Version, deployMode, solutionName, solutionVersion);
-
-            solutionReleaseInstallation.ValdateInstallation();
+            using (SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization))
+            {
+                foreach (SolutionManifestProjectEntry project in solutionReleaseInstallation.LocalizedEntry.Projects)
+                    InstallProject(directory, project.Name, project.Version, deployMode, solutionName, solutionVersion);
+            }
         }
 
         public void InstallProject(string directory, string projectName, string projectVersion, uint? deployMode, string solutionName = null, string solutionVersion = null)
         {
-            var projectsURL = String.Format("{0}/projects/{1}", LeagueCDNBaseURL, projectName);
-
             if (String.Equals(projectVersion, Constants.LatestVersionString))
                 projectVersion = GetLatestProjectRelease(projectName);
 
-            var projectFolder = String.Format("{0}/RADS/projects/{1}", directory, projectName);
-            var releaseFolder = String.Format("{0}/releases/{1}", projectFolder, projectVersion);
-            var deployFolder = releaseFolder + "/deploy";
-            var managedFilesFolder = projectFolder + "/managedfiles";
-            var archivesFolder = projectFolder + "/filearchives";
-            Directory.CreateDirectory(deployFolder);
-            Directory.CreateDirectory(managedFilesFolder);
-            Directory.CreateDirectory(archivesFolder);
-
-            string solutionDeployFolder = null;
-            if (solutionName != null)
-                solutionDeployFolder = String.Format("{0}/RADS/solutions/{1}/releases/{2}/deploy", directory, solutionName, solutionVersion);
-
-            // Getting release manifest
             Console.WriteLine("Downloading manifest for project {0}, release {1}...", projectName, projectVersion);
-            var currentProjectURL = String.Format("{0}/releases/{1}", projectsURL, projectVersion);
-            webClient.DownloadFile(currentProjectURL + "/releasemanifest", releaseFolder + "/releasemanifest");
-            var releaseManifest = new ReleaseManifestFile(releaseFolder + "/releasemanifest");
+            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
 
-            // Downloading files
-            var files = new List<ReleaseManifestFileEntry>();
-            EnumerateManifestFolderFiles(releaseManifest.Project, files);
-            files.Sort((x, y) => (x.Version.CompareTo(y.Version)));
-
-            string currentArchiveVersion = null;
-            var currentRAFs = new List<RAF>();
-            foreach (ReleaseManifestFileEntry file in files)
+            using (ProjectReleaseInstallation installation = new ProjectReleaseInstallation(projectRelease, directory, solutionName, solutionVersion))
             {
-                var remoteAsset = new RemoteAsset(file, projectsURL, webClient);
-                AssetContent assetContent = remoteAsset.AssetContent;
-                Console.Write("■ Downloading {0}/{1}", remoteAsset.StringVersion, remoteAsset.FileFullPath);
-                try
+                foreach (ReleaseManifestFileEntry file in projectRelease.EnumerateFiles())
                 {
-                    // Change deploy mode if specified
-                    if (deployMode != null)
-                        file.DeployMode = (ReleaseManifestFile.DeployMode)deployMode;
-
-                    if (file.DeployMode == RAFCompressed || file.DeployMode == RAFRaw)
+                    RemoteAsset remoteAsset = projectRelease.GetRemoteAsset(file);
+                    Console.Write("■ Downloading {0}/{1}", remoteAsset.StringVersion, remoteAsset.FileFullPath);
+                    try
                     {
-                        // File has to be put in a RAF
-                        if (!currentRAFs.Any() || currentArchiveVersion != remoteAsset.StringVersion)
-                        {
-                            if (currentRAFs.Any())
-                                currentRAFs[0]?.Save();
-                            foreach (RAF raf in currentRAFs)
-                                raf.Dispose();
-                            currentRAFs.Clear();
-                            currentArchiveVersion = remoteAsset.StringVersion;
-                            Directory.CreateDirectory(String.Format("{0}/{1}", archivesFolder, remoteAsset.StringVersion));
-                            foreach (string rafFile in Directory.EnumerateFiles(String.Format("{0}/{1}", archivesFolder, remoteAsset.StringVersion), "*.raf"))
-                                currentRAFs.Add(new RAF(rafFile));
-                            if (!currentRAFs.Any())
-                                currentRAFs.Add(new RAF(String.Format("{0}/{1}/Archive_1.raf", archivesFolder, remoteAsset.StringVersion)));
-                        }
-                        // Check if file is already in a RAF and in good shape
-                        bool fileAlreadyDownloaded = false;
-                        foreach (RAF raf in currentRAFs)
-                        {
-                            RAFFileEntry fileEntry = raf.Files.Find(x => x.Path.Equals(remoteAsset.FileFullPath, StringComparison.InvariantCultureIgnoreCase));
-                            if (fileEntry != null)
-                            {
-                                if (!Enumerable.SequenceEqual(file.MD5, CalculateMD5(fileEntry.GetContent(file.DeployMode == RAFCompressed))))
-                                {
-                                    raf.Files.Remove(fileEntry);
-                                }
-                                else
-                                {
-                                    fileAlreadyDownloaded = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (!fileAlreadyDownloaded)
-                            currentRAFs[0].AddFile(remoteAsset.FileFullPath, assetContent.GetAssetData(file.DeployMode == RAFCompressed), false);
+                        installation.InstallFile(remoteAsset);
+                        Console.SetCursorPosition(0, Console.CursorTop);
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.WriteLine("■");
                     }
-                    else if (file.DeployMode == Managed)
+                    catch (Exception)
                     {
-                        // File will be in managedfiles folder
-                        var filePath = String.Format("{0}/{1}/{2}", managedFilesFolder, remoteAsset.StringVersion, remoteAsset.FileFullPath);
-                        if (!File.Exists(filePath) || !Enumerable.SequenceEqual(file.MD5, CalculateMD5(filePath)))
-                        {
-                            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                            assetContent.WriteAssetToFile(filePath, false);
-                        }
+                        Console.SetCursorPosition(0, Console.CursorTop);
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("■");
                     }
-                    else if (file.DeployMode == Deployed0 || file.DeployMode == Deployed4)
-                    {
-                        // File will be in deploy folder
-                        var deployPath = String.Format("{0}/{1}", deployFolder, remoteAsset.FileFullPath);
-                        if (!File.Exists(deployPath) || !Enumerable.SequenceEqual(file.MD5, CalculateMD5(deployPath)))
-                        {
-                            Directory.CreateDirectory(Path.GetDirectoryName(deployPath));
-                            assetContent.WriteAssetToFile(deployPath, false);
-                        }
-                        if (solutionDeployFolder != null && file.DeployMode == Deployed4)
-                        {
-                            // File will also be in solution folder
-                            var solutionPath = String.Format("{0}/{1}", solutionDeployFolder, remoteAsset.FileFullPath);
-                            if (!File.Exists(solutionPath) || !Enumerable.SequenceEqual(file.MD5, CalculateMD5(solutionPath)))
-                            {
-                                Directory.CreateDirectory(Path.GetDirectoryName(solutionPath));
-                                File.Copy(deployPath, solutionPath);
-                            }
-                        }
-                    }
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("■");
+                    Console.ResetColor();
                 }
-                catch (Exception)
-                {
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("■");
-                }
-                Console.ResetColor();
             }
-            foreach (RAF raf in currentRAFs)
-                raf.Dispose();
-            releaseManifest.Write(releaseFolder + "/releasemanifest");
-            File.Create(releaseFolder + "/S_OK").Close();
         }
 
         public void ListFiles(string projectName, string projectVersion, string filter = null, string filesRevision = null)
