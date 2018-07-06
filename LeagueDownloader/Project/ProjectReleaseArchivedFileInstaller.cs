@@ -43,14 +43,23 @@ namespace LeagueDownloader.Project
                 RAFFileEntry fileEntry = raf.Files.Find(x => x.Path.Equals(remoteAsset.FileFullPath, StringComparison.InvariantCultureIgnoreCase));
                 if (fileEntry != null)
                 {
-                    if (!Enumerable.SequenceEqual(remoteAsset.FileEntry.MD5, Utilities.CalculateMD5(fileEntry.GetContent(remoteAsset.FileEntry.DeployMode == RAFCompressed))))
+                    try
                     {
-                        raf.Files.Remove(fileEntry);
+                        byte[] fileEntryContent = fileEntry.GetContent(remoteAsset.FileEntry.DeployMode == RAFCompressed);
+                        if (Enumerable.SequenceEqual(remoteAsset.FileEntry.MD5, Utilities.CalculateMD5(fileEntryContent)))
+                        {
+                            fileAlreadyDownloaded = true;
+                        }
+                    }
+                    catch (Exception ) { }
+
+                    if (fileAlreadyDownloaded)
+                    {
+                        break;
                     }
                     else
                     {
-                        fileAlreadyDownloaded = true;
-                        break;
+                        raf.Files.Remove(fileEntry);
                     }
                 }
             }
