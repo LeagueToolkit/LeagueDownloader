@@ -29,9 +29,7 @@ namespace LeagueDownloader.Content
             if (this.IsCompressed)
                 this.RemoteURL += ".compressed";
 
-            // Check if file size is smaller than 50 MB.
-            // Small files are downloaded and decompressed in RAM.
-            // Big files are downloaded and compressed in and from a temp file to reduce RAM usage.
+            // Store larger files on file system.
             if (this.FileEntry.SizeRaw / (1048576) < 50)
             {
                 this.AssetContent = new DataAssetContent(_webClient, this.IsCompressed, this.RemoteURL);
