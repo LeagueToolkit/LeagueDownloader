@@ -12,16 +12,17 @@ namespace LeagueDownloader.Project
     public class ProjectReleaseDeployedFileInstaller : ProjectReleaseFileInstaller
     {
         public string DeployDirectory { get; private set; }
-        public string SolutionDirectory { get; private set; }
+        public string SolutionReleaseDirectory { get; private set; }
 
-        public ProjectReleaseDeployedFileInstaller(string installationDirectory, string releaseDirectory, string solutionName, string solutionVersion)
+        public ProjectReleaseDeployedFileInstaller(string releaseDirectory, string solutionReleaseDirectory)
         {
             this.DeployDirectory = releaseDirectory + "/deploy";
             Directory.CreateDirectory(this.DeployDirectory);
-            if (solutionName != null && solutionVersion != null)
+
+            this.SolutionReleaseDirectory = solutionReleaseDirectory;
+            if (this.SolutionReleaseDirectory != null)
             {
-                this.SolutionDirectory = String.Format("{0}/RADS/solutions/{1}/releases/{2}/deploy", installationDirectory, solutionName, solutionVersion);
-                Directory.CreateDirectory(this.SolutionDirectory);
+                Directory.CreateDirectory(this.SolutionReleaseDirectory);
             }
         }
 
@@ -33,10 +34,10 @@ namespace LeagueDownloader.Project
                 Directory.CreateDirectory(Path.GetDirectoryName(deployPath));
                 remoteAsset.AssetContent.WriteAssetToFile(deployPath, false);
             }
-            if (this.SolutionDirectory != null && remoteAsset.FileEntry.DeployMode == Deployed4)
+            if (this.SolutionReleaseDirectory != null && remoteAsset.FileEntry.DeployMode == Deployed4)
             {
                 // File will also be in solution folder
-                string solutionPath = String.Format("{0}/{1}", this.SolutionDirectory, remoteAsset.FileFullPath);
+                string solutionPath = String.Format("{0}/{1}", this.SolutionReleaseDirectory, remoteAsset.FileFullPath);
                 if (!File.Exists(solutionPath) || !Enumerable.SequenceEqual(remoteAsset.FileEntry.MD5, Utilities.CalculateMD5(solutionPath)))
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(solutionPath));

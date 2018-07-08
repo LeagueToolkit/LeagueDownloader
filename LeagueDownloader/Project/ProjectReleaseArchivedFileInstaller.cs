@@ -16,9 +16,9 @@ namespace LeagueDownloader.Project
 
         private List<ArchiveVersionDirectory> rafDirectories = new List<ArchiveVersionDirectory>();
 
-        public ProjectReleaseArchivedFileInstaller(string installationFolder)
+        public ProjectReleaseArchivedFileInstaller(string installationDirectory)
         {
-            this.ArchivesDirectory = installationFolder + "/filearchives";
+            this.ArchivesDirectory = installationDirectory + "/filearchives";
             Directory.CreateDirectory(this.ArchivesDirectory);
         }
 

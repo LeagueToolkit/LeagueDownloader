@@ -26,9 +26,15 @@ namespace LeagueDownloader.Project
             this.ProjectDirectory = String.Format("{0}/RADS/projects/{1}", installationDirectory, projectRelease.Name);
             this.ProjectReleaseDirectory = String.Format("{0}/releases/{1}", this.ProjectDirectory, projectRelease.Version);
 
+            string solutionReleaseDirectory = null;
+            if (solutionName != null && solutionVersion != null)
+            {
+                solutionReleaseDirectory = String.Format("{0}/RADS/solutions/{1}/releases/{2}", installationDirectory, solutionName, solutionVersion);
+            }
+
             this.ProjectReleaseArchivedFileInstaller = new ProjectReleaseArchivedFileInstaller(this.ProjectDirectory);
             this.ProjectReleaseManagedFileInstaller = new ProjectReleaseManagedFileInstaller(this.ProjectDirectory);
-            this.ProjectReleaseDeployedFileInstaller = new ProjectReleaseDeployedFileInstaller(this.ProjectDirectory, this.ProjectReleaseDirectory, solutionName, solutionVersion);
+            this.ProjectReleaseDeployedFileInstaller = new ProjectReleaseDeployedFileInstaller(this.ProjectReleaseDirectory, solutionReleaseDirectory);
         }
 
         public void InstallFile(RemoteAsset remoteAsset)
@@ -41,7 +47,7 @@ namespace LeagueDownloader.Project
                     fileInstaller = this.ProjectReleaseArchivedFileInstaller;
                     break;
                 case Managed:
-                    fileInstaller = this.ProjectReleaseDeployedFileInstaller;
+                    fileInstaller = this.ProjectReleaseManagedFileInstaller;
                     break;
                 case Deployed0:
                 case Deployed4:

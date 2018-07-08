@@ -12,9 +12,9 @@ namespace LeagueDownloader.Project
     {
         public string ManagedFilesDirectory { get; private set; }
 
-        public ProjectReleaseManagedFileInstaller(string installationFolder)
+        public ProjectReleaseManagedFileInstaller(string installationDirectory)
         {
-            this.ManagedFilesDirectory = installationFolder + "/managedfiles";
+            this.ManagedFilesDirectory = installationDirectory + "/managedfiles";
             Directory.CreateDirectory(this.ManagedFilesDirectory);
         }
 
