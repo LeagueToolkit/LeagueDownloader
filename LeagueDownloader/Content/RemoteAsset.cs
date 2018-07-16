@@ -18,14 +18,14 @@ namespace LeagueDownloader.Content
         public AssetContent AssetContent { get; private set; }
         private WebClient _webClient;
 
-        public RemoteAsset(ReleaseManifestFileEntry fileEntry, string projectsURL, WebClient webClient)
+        public RemoteAsset(ReleaseManifestFileEntry fileEntry, string projectURL, WebClient webClient)
         {
             this._webClient = webClient;
             this.FileEntry = fileEntry;
             this.StringVersion = Utilities.GetReleaseString(fileEntry.Version);
             this.FileFullPath = fileEntry.GetFullPath();
             this.IsCompressed = this.FileEntry.SizeCompressed > 0;
-            this.RemoteURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectsURL, this.StringVersion, this.FileFullPath));
+            this.RemoteURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectURL, this.StringVersion, this.FileFullPath));
             if (this.IsCompressed)
                 this.RemoteURL += ".compressed";
 
