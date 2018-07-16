@@ -3,20 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace LeagueDownloader.Solution
 {
     public class SolutionManifest
     {
+        private const string Header = "RADS Solution Manifest";
+
         public string ManifestVersion { get; private set; }
         public string SolutionName { get; private set; }
         public string SolutionVersion { get; private set; }
-        public List<SolutionProject> Projects { get; private set; } = new List<SolutionProject>();
-        public List<LocalizedEntry> LocalizedEntries { get; private set; } = new List<LocalizedEntry>();
+        public List<SolutionManifestProjectEntry> Projects { get; private set; } = new List<SolutionManifestProjectEntry>();
+        public List<SolutionManifestLocalizedEntry> LocalizedEntries { get; private set; } = new List<SolutionManifestLocalizedEntry>();
 
         public SolutionManifest(string[] manifestContents)
         {
-            if (manifestContents[0] != "RADS Solution Manifest")
+            if (manifestContents[0] != Header)
                 throw new Exception("This is not a valid RADS Solution Manifest");
 
             ManifestVersion = manifestContents[1];
@@ -26,7 +29,7 @@ namespace LeagueDownloader.Solution
             int currentIndex = 5;
             for (int i = 0; i < projectsCount; i++)
             {
-                Projects.Add(new SolutionProject(
+                Projects.Add(new SolutionManifestProjectEntry(
                     manifestContents[currentIndex],
                     manifestContents[currentIndex + 1],
                     Int32.Parse(manifestContents[currentIndex + 2]),
@@ -37,7 +40,7 @@ namespace LeagueDownloader.Solution
             currentIndex++;
             for (int i = 0; i < localizedEntriesCount; i++)
             {
-                List<SolutionProject> localizedProjects = new List<SolutionProject>();
+                List<SolutionManifestProjectEntry> localizedProjects = new List<SolutionManifestProjectEntry>();
                 string name = manifestContents[currentIndex];
                 int unknown = Int32.Parse(manifestContents[currentIndex + 1]);
                 int localizedProjectsCount = Int32.Parse(manifestContents[currentIndex + 2]);
@@ -48,7 +51,37 @@ namespace LeagueDownloader.Solution
                     localizedProjects.Add(Projects.Find(x => x.Name.Equals(projectName)));
                     currentIndex++;
                 }
-                LocalizedEntries.Add(new LocalizedEntry(name, unknown, localizedProjects));
+                LocalizedEntries.Add(new SolutionManifestLocalizedEntry(name, unknown, localizedProjects));
+            }
+        }
+
+        public void Write(string filePath)
+        {
+            using (StreamWriter sw = new StreamWriter(File.Create(filePath)) { NewLine = "\r\n" })
+            {
+                sw.WriteLine(Header);
+                sw.WriteLine(ManifestVersion);
+                sw.WriteLine(SolutionName);
+                sw.WriteLine(SolutionVersion);
+                sw.WriteLine(Projects.Count);
+                foreach (SolutionManifestProjectEntry entry in Projects)
+                {
+                    sw.WriteLine(entry.Name);
+                    sw.WriteLine(entry.Version);
+                    sw.WriteLine(entry.Unknown1);
+                    sw.WriteLine(entry.Unknown2);
+                }
+                sw.WriteLine(LocalizedEntries.Count);
+                foreach (SolutionManifestLocalizedEntry entry in LocalizedEntries)
+                {
+                    sw.WriteLine(entry.Name);
+                    sw.WriteLine(entry.Unknown);
+                    sw.WriteLine(entry.Projects.Count);
+                    foreach (SolutionManifestProjectEntry projectEntry in entry.Projects)
+                    {
+                        sw.WriteLine(projectEntry.Name);
+                    }
+                }
             }
         }
     }

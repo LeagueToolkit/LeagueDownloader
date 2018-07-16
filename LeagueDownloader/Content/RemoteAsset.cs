@@ -18,20 +18,18 @@ namespace LeagueDownloader.Content
         public AssetContent AssetContent { get; private set; }
         private WebClient _webClient;
 
-        public RemoteAsset(ReleaseManifestFileEntry fileEntry, string projectsURL, WebClient webClient)
+        public RemoteAsset(ReleaseManifestFileEntry fileEntry, string projectURL, WebClient webClient)
         {
             this._webClient = webClient;
             this.FileEntry = fileEntry;
             this.StringVersion = Utilities.GetReleaseString(fileEntry.Version);
             this.FileFullPath = fileEntry.GetFullPath();
             this.IsCompressed = this.FileEntry.SizeCompressed > 0;
-            this.RemoteURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectsURL, this.StringVersion, this.FileFullPath));
+            this.RemoteURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectURL, this.StringVersion, this.FileFullPath));
             if (this.IsCompressed)
                 this.RemoteURL += ".compressed";
 
-            // Check if file size is smaller than 50 MB.
-            // Small files are downloaded and decompressed in RAM.
-            // Big files are downloaded and compressed in and from a temp file to reduce RAM usage.
+            // Store larger files on file system.
             if (this.FileEntry.SizeRaw / (1048576) < 50)
             {
                 this.AssetContent = new DataAssetContent(_webClient, this.IsCompressed, this.RemoteURL);
