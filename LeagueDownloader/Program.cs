@@ -101,14 +101,8 @@ namespace LeagueDownloader
             public bool SaveManifest { get; set; }
         }
 
-        static void Initialize()
-        {
-            Directory.CreateDirectory("temp");
-        }
-
         static void Main(string[] args)
         {
-            Initialize();
             Parser.Default.ParseArguments<SolutionOptions, ProjectOptions, ListOptions, DownloadOptions, RangeDownloadOptions>(args)
               .MapResult(
                 (SolutionOptions opts) => InstallSolution(opts),

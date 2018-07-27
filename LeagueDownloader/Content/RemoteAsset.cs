@@ -16,11 +16,9 @@ namespace LeagueDownloader.Content
         public string FileFullPath { get; private set; }
         public bool IsCompressed { get; private set; }
         public AssetContent AssetContent { get; private set; }
-        private WebClient _webClient;
 
-        public RemoteAsset(ReleaseManifestFileEntry fileEntry, string projectURL, WebClient webClient)
+        public RemoteAsset(ReleaseManifestFileEntry fileEntry, string projectURL)
         {
-            this._webClient = webClient;
             this.FileEntry = fileEntry;
             this.StringVersion = Utilities.GetReleaseString(fileEntry.Version);
             this.FileFullPath = fileEntry.GetFullPath();
@@ -28,16 +26,7 @@ namespace LeagueDownloader.Content
             this.RemoteURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectURL, this.StringVersion, this.FileFullPath));
             if (this.IsCompressed)
                 this.RemoteURL += ".compressed";
-
-            // Store larger files on file system.
-            if (this.FileEntry.SizeRaw / (1048576) < 50)
-            {
-                this.AssetContent = new DataAssetContent(_webClient, this.IsCompressed, this.RemoteURL);
-            }
-            else
-            {
-                this.AssetContent = new FileAssetContent(_webClient, this.IsCompressed, this.RemoteURL);
-            }
+            this.AssetContent = new AssetContent(this.IsCompressed, this.RemoteURL);
         }
     }
 }

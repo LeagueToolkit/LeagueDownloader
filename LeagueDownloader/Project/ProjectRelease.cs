@@ -19,8 +19,6 @@ namespace LeagueDownloader.Project
         public string ProjectBaseURL { get; private set; }
         public string ReleaseBaseURL { get; private set; }
 
-        private readonly WebClient webClient = new WebClient();
-
         public ProjectRelease(string name, string version, string leagueCDNBaseURL)
         {
             this.Name = name;
@@ -28,7 +26,7 @@ namespace LeagueDownloader.Project
             this.LeagueCDNBaseURL = leagueCDNBaseURL;
             this.ProjectBaseURL = String.Format("{0}/projects/{1}", this.LeagueCDNBaseURL, this.Name);
             this.ReleaseBaseURL = String.Format("{0}/releases/{1}", this.ProjectBaseURL, this.Version);
-            this.ReleaseManifest = new ReleaseManifestFile(this.webClient.OpenRead(this.ReleaseBaseURL + "/releasemanifest"));
+            this.ReleaseManifest = new ReleaseManifestFile(new WebClient().OpenRead(this.ReleaseBaseURL + "/releasemanifest"));
         }
 
         public List<ReleaseManifestFileEntry> EnumerateFiles()
@@ -48,7 +46,7 @@ namespace LeagueDownloader.Project
 
         public RemoteAsset GetRemoteAsset(ReleaseManifestFileEntry fileEntry)
         {
-            return new RemoteAsset(fileEntry, this.ProjectBaseURL, this.webClient);
+            return new RemoteAsset(fileEntry, this.ProjectBaseURL);
         }
     }
 }
