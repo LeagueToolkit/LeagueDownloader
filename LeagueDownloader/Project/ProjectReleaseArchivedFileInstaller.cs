@@ -51,7 +51,7 @@ namespace LeagueDownloader.Project
                             fileAlreadyDownloaded = true;
                         }
                     }
-                    catch (Exception ) { }
+                    catch (Exception) { }
 
                     if (fileAlreadyDownloaded)
                     {
