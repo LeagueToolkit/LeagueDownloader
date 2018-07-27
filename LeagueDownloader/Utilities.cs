@@ -62,13 +62,6 @@ namespace LeagueDownloader
             return decompressedData;
         }
 
-        public static void EnumerateManifestFolderFiles(ReleaseManifestFolderEntry folder, List<ReleaseManifestFileEntry> currentList)
-        {
-            currentList.AddRange(folder.Files);
-            foreach (ReleaseManifestFolderEntry subFolder in folder.Folders)
-                EnumerateManifestFolderFiles(subFolder, currentList);
-        }
-
         public static string GetReleaseString(uint releaseValue)
         {
             return String.Format("{0}.{1}.{2}.{3}", (releaseValue & 0xFF000000) >> 24, (releaseValue & 0x00FF0000) >> 16, (releaseValue & 0x0000FF00) >> 8, releaseValue & 0x000000FF);
