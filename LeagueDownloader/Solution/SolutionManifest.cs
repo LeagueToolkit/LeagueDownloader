@@ -19,14 +19,14 @@ namespace LeagueDownloader.Solution
             if (manifestContents[0] != Header)
                 throw new Exception("This is not a valid RADS Solution Manifest");
 
-            ManifestVersion = manifestContents[1];
-            SolutionName = manifestContents[2];
-            SolutionVersion = manifestContents[3];
+            this.ManifestVersion = manifestContents[1];
+            this.SolutionName = manifestContents[2];
+            this.SolutionVersion = manifestContents[3];
             int projectsCount = Int32.Parse(manifestContents[4]);
             int currentIndex = 5;
             for (int i = 0; i < projectsCount; i++)
             {
-                Projects.Add(new SolutionManifestProjectEntry(
+                this.Projects.Add(new SolutionManifestProjectEntry(
                     manifestContents[currentIndex],
                     manifestContents[currentIndex + 1],
                     Int32.Parse(manifestContents[currentIndex + 2]),
@@ -48,7 +48,7 @@ namespace LeagueDownloader.Solution
                     localizedProjects.Add(Projects.Find(x => x.Name.Equals(projectName)));
                     currentIndex++;
                 }
-                LocalizedEntries.Add(new SolutionManifestLocalizedEntry(name, unknown, localizedProjects));
+                this.LocalizedEntries.Add(new SolutionManifestLocalizedEntry(name, unknown, localizedProjects));
             }
         }
 
@@ -57,19 +57,19 @@ namespace LeagueDownloader.Solution
             using (StreamWriter sw = new StreamWriter(File.Create(filePath)) { NewLine = "\r\n" })
             {
                 sw.WriteLine(Header);
-                sw.WriteLine(ManifestVersion);
-                sw.WriteLine(SolutionName);
-                sw.WriteLine(SolutionVersion);
-                sw.WriteLine(Projects.Count);
-                foreach (SolutionManifestProjectEntry entry in Projects)
+                sw.WriteLine(this.ManifestVersion);
+                sw.WriteLine(this.SolutionName);
+                sw.WriteLine(this.SolutionVersion);
+                sw.WriteLine(this.Projects.Count);
+                foreach (SolutionManifestProjectEntry entry in this.Projects)
                 {
                     sw.WriteLine(entry.Name);
                     sw.WriteLine(entry.Version);
                     sw.WriteLine(entry.Unknown1);
                     sw.WriteLine(entry.Unknown2);
                 }
-                sw.WriteLine(LocalizedEntries.Count);
-                foreach (SolutionManifestLocalizedEntry entry in LocalizedEntries)
+                sw.WriteLine(this.LocalizedEntries.Count);
+                foreach (SolutionManifestLocalizedEntry entry in this.LocalizedEntries)
                 {
                     sw.WriteLine(entry.Name);
                     sw.WriteLine(entry.Unknown);

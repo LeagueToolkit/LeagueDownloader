@@ -20,6 +20,9 @@ namespace LeagueDownloader.Project
             this.ProjectDirectory = String.Format("{0}/RADS/projects/{1}", installationDirectory, projectRelease.Name);
             this.ProjectReleaseDirectory = String.Format("{0}/releases/{1}", this.ProjectDirectory, projectRelease.Version);
 
+            Directory.CreateDirectory(this.ProjectReleaseDirectory);
+            this.ProjectRelease.ReleaseManifest.Write(this.ProjectReleaseDirectory + "/releasemanifest");
+
             string solutionReleaseDirectory = null;
             if (solutionName != null && solutionVersion != null)
             {

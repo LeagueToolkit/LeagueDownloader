@@ -10,9 +10,9 @@ namespace LeagueDownloader.Solution
 
         public SolutionManifestLocalizedEntry(string name, int unknown, List<SolutionManifestProjectEntry> projects)
         {
-            Name = name;
-            Unknown = unknown;
-            Projects = projects;
+            this.Name = name;
+            this.Unknown = unknown;
+            this.Projects = projects;
         }
     }
 }

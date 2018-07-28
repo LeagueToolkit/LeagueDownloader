@@ -21,13 +21,13 @@ namespace LeagueDownloader.Solution
 
         private SolutionManifest GetSolutionManifest()
         {
-            byte[] solutionManifestData = new WebClient().DownloadData(String.Format("{0}/solutions/{1}/releases/{2}/solutionmanifest", LeagueCDNBaseURL, Name, Version));
+            byte[] solutionManifestData = new WebClient().DownloadData(String.Format("{0}/solutions/{1}/releases/{2}/solutionmanifest", this.LeagueCDNBaseURL, this.Name, this.Version));
             return new SolutionManifest(Encoding.ASCII.GetString(solutionManifestData).Split(new[] { "\r\n" }, StringSplitOptions.None));
         }
 
         public SolutionReleaseInstallation CreateInstallation(string installDirectory, string localization)
         {
-            SolutionManifestLocalizedEntry localizedEntry = SolutionManifest.LocalizedEntries.Find(x => x.Name.Equals(localization, StringComparison.InvariantCultureIgnoreCase));
+            SolutionManifestLocalizedEntry localizedEntry = this.SolutionManifest.LocalizedEntries.Find(x => x.Name.Equals(localization, StringComparison.InvariantCultureIgnoreCase));
             if (localizedEntry != null)
             {
                 return new SolutionReleaseInstallation(this, localizedEntry, installDirectory);

@@ -9,10 +9,10 @@
 
         public SolutionManifestProjectEntry(string name, string version, int unknown1, int unknown2)
         {
-            Name = name;
-            Version = version;
-            Unknown1 = unknown1;
-            Unknown2 = unknown2;
+            this.Name = name;
+            this.Version = version;
+            this.Unknown1 = unknown1;
+            this.Unknown2 = unknown2;
         }
     }
 }

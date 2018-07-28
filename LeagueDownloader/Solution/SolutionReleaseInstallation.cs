@@ -11,23 +11,23 @@ namespace LeagueDownloader.Solution
 
         public SolutionReleaseInstallation(SolutionRelease solutionRelease, SolutionManifestLocalizedEntry localizedEntry, string installationDirectory)
         {
-            SolutionRelease = solutionRelease;
-            LocalizedEntry = localizedEntry;
+            this.SolutionRelease = solutionRelease;
+            this.LocalizedEntry = localizedEntry;
 
-            InstallationDirectory = String.Format("{0}/RADS/solutions/{1}/releases/{2}", InstallationDirectory, SolutionRelease.Name, SolutionRelease.Version);
-            Directory.CreateDirectory(InstallationDirectory);
+            this.InstallationDirectory = String.Format("{0}/RADS/solutions/{1}/releases/{2}", installationDirectory, this.SolutionRelease.Name, this.SolutionRelease.Version);
+            Directory.CreateDirectory(this.InstallationDirectory);
 
             // Write the solution manifest
-            SolutionRelease.SolutionManifest.Write(InstallationDirectory + "/solutionmanifest");
+            this.SolutionRelease.SolutionManifest.Write(this.InstallationDirectory + "/solutionmanifest");
 
             // Create & Write a configurationmanifest
-            ConfigurationManifest configurationManifest = new ConfigurationManifest(LocalizedEntry);
-            configurationManifest.Write(InstallationDirectory + "/configurationmanifest");
+            ConfigurationManifest configurationManifest = new ConfigurationManifest(this.LocalizedEntry);
+            configurationManifest.Write(this.InstallationDirectory + "/configurationmanifest");
         }
 
         public void Dispose()
         {
-            File.Create(InstallationDirectory + "/S_OK").Close();
+            File.Create(this.InstallationDirectory + "/S_OK").Close();
         }
     }
 }

@@ -11,8 +11,8 @@ namespace LeagueDownloader.Solution
 
         public ConfigurationManifest(SolutionManifestLocalizedEntry localizedEntry, string manifestVersion = "1.0.0.0")
         {
-            ManifestVersion = manifestVersion;
-            LocalizedEntry = localizedEntry;
+            this.ManifestVersion = manifestVersion;
+            this.LocalizedEntry = localizedEntry;
         }
 
         public void Write(string fileLocation)
@@ -20,10 +20,10 @@ namespace LeagueDownloader.Solution
             using (StreamWriter sw = new StreamWriter(fileLocation))
             {
                 sw.WriteLine(Header);
-                sw.WriteLine(ManifestVersion);
-                sw.WriteLine(LocalizedEntry.Name);
-                sw.WriteLine(LocalizedEntry.Projects.Count);
-                foreach (SolutionManifestProjectEntry project in LocalizedEntry.Projects)
+                sw.WriteLine(this.ManifestVersion);
+                sw.WriteLine(this.LocalizedEntry.Name);
+                sw.WriteLine(this.LocalizedEntry.Projects.Count);
+                foreach (SolutionManifestProjectEntry project in this.LocalizedEntry.Projects)
                     sw.WriteLine(project.Name);
             }
         }
