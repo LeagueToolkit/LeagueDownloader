@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Fantome.Libraries.League.IO.ReleaseManifest;
-using System.IO;
+using Fantome.Libraries.RADS.IO.ReleaseManifest;
 using System.Net;
 using LeagueDownloader.Content;
 

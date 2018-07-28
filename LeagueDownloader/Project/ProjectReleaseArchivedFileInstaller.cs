@@ -3,10 +3,8 @@ using LeagueDownloader.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Fantome.Libraries.League.IO.RiotArchive;
-using static Fantome.Libraries.League.IO.ReleaseManifest.ReleaseManifestFile.DeployMode;
+using Fantome.Libraries.RADS.IO.RiotArchive;
+using static Fantome.Libraries.RADS.IO.ReleaseManifest.ReleaseManifestFile.DeployMode;
 
 namespace LeagueDownloader.Project
 {

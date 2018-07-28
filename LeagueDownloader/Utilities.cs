@@ -1,12 +1,6 @@
-﻿using Fantome.Libraries.League.IO.ReleaseManifest;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace LeagueDownloader
 {

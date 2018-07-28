@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
-using System.Net;
 using LeagueDownloader.Content;
-using Fantome.Libraries.League.IO.ReleaseManifest;
-using static Fantome.Libraries.League.IO.ReleaseManifest.ReleaseManifestFile.DeployMode;
+using static Fantome.Libraries.RADS.IO.ReleaseManifest.ReleaseManifestFile.DeployMode;
 
 namespace LeagueDownloader.Project
 {

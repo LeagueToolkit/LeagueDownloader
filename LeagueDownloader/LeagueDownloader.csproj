@@ -36,9 +36,8 @@
     <Reference Include="CommandLine, Version=2.2.1.0, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.2.2.1\lib\net45\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="Fantome.Libraries.League, Version=0.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\lib\Fantome.Libraries.League.dll</HintPath>
+    <Reference Include="Fantome.Libraries.RADS">
+      <HintPath>..\lib\Fantome.Libraries.RADS.dll</HintPath>
     </Reference>
     <Reference Include="Iconic.Zlib.Netstandard, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Iconic.Zlib.Netstandard.1.0.0\lib\netstandard1.3\Iconic.Zlib.Netstandard.dll</HintPath>
