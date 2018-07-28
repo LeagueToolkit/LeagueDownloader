@@ -14,7 +14,7 @@ namespace LeagueDownloader.Solution
         public string ManifestVersion { get; private set; }
         public SolutionManifestLocalizedEntry LocalizedEntry { get; private set; }
 
-        public ConfigurationManifest(SolutionManifestLocalizedEntry localizedEntry, String manifestVersion = "1.0.0.0")
+        public ConfigurationManifest(SolutionManifestLocalizedEntry localizedEntry, string manifestVersion = "1.0.0.0")
         {
             ManifestVersion = manifestVersion;
             LocalizedEntry = localizedEntry;
@@ -22,7 +22,7 @@ namespace LeagueDownloader.Solution
 
         public void Write(string fileLocation)
         {
-            using (var sw = new StreamWriter(fileLocation))
+            using (StreamWriter sw = new StreamWriter(fileLocation))
             {
                 sw.WriteLine(Header);
                 sw.WriteLine(ManifestVersion);

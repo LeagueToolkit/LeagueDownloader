@@ -115,35 +115,35 @@ namespace LeagueDownloader
 
         static int InstallSolution(SolutionOptions opts)
         {
-            var radsInteractor = new RADSInteractor(opts.CDNBaseURL);
+            RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
             radsInteractor.InstallSolution(opts.OutputFolder, opts.Name, opts.Version, opts.Localization, opts.DeployMode);
             return 1;
         }
 
         static int InstallProject(ProjectOptions opts)
         {
-            var radsInteractor = new RADSInteractor(opts.CDNBaseURL);
+            RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
             radsInteractor.InstallProject(opts.OutputFolder, opts.Name, opts.Version, opts.DeployMode);
             return 1;
         }
 
         static int ListFiles(ListOptions opts)
         {
-            var radsInteractor = new RADSInteractor(opts.CDNBaseURL);
+            RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
             radsInteractor.ListFiles(opts.ProjectName, opts.ProjectVersion, opts.Filter, opts.FilesRevision);
             return 1;
         }
 
         static int DownloadFiles(DownloadOptions opts)
         {
-            var radsInteractor = new RADSInteractor(opts.CDNBaseURL);
+            RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
             radsInteractor.DownloadFiles(opts.OutputFolder, opts.ProjectName, opts.ProjectVersion, opts.Filter, opts.FilesRevision, opts.SaveManifest);
             return 1;
         }
 
         static int RangeDownloadFiles(RangeDownloadOptions opts)
         {
-            var radsInteractor = new RADSInteractor(opts.CDNBaseURL);
+            RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
             radsInteractor.RangeDownloadFiles(opts.OutputFolder, opts.ProjectName, opts.IgnoreOlderFiles, opts.Filter, opts.StartRevision, opts.EndRevision, opts.SaveManifest);
             return 1;
         }

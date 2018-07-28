@@ -25,9 +25,9 @@ namespace LeagueDownloader
 
         public static byte[] CalculateMD5(string filePath)
         {
-            using (var md5 = MD5.Create())
+            using (MD5 md5 = MD5.Create())
             {
-                using (var stream = File.OpenRead(filePath))
+                using (FileStream stream = File.OpenRead(filePath))
                 {
                     return md5.ComputeHash(stream);
                 }
@@ -36,9 +36,9 @@ namespace LeagueDownloader
 
         public static byte[] CalculateMD5(byte[] fileData)
         {
-            using (var md5 = MD5.Create())
+            using (MD5 md5 = MD5.Create())
             {
-                using (var stream = new MemoryStream(fileData))
+                using (MemoryStream stream = new MemoryStream(fileData))
                 {
                     return md5.ComputeHash(stream);
                 }

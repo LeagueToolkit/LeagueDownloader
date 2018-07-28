@@ -92,7 +92,7 @@ namespace LeagueDownloader
             ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
             if (saveManifest)
             {
-                String manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, projectVersion);
+                string manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, projectVersion);
                 Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
                 projectRelease.ReleaseManifest.Write(manifestPath);
             }
@@ -124,7 +124,7 @@ namespace LeagueDownloader
                 ProjectRelease projectRelease = new ProjectRelease(projectName, releaseString, this.LeagueCDNBaseURL);
                 if (saveManifest)
                 {
-                    String manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, releaseString);
+                    string manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, releaseString);
                     Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
                     projectRelease.ReleaseManifest.Write(manifestPath);
                 }
@@ -166,7 +166,7 @@ namespace LeagueDownloader
 
         private List<ReleaseManifestFileEntry> FilterFiles(List<ReleaseManifestFileEntry> fullList, string filter = null, string filesRevision = null)
         {
-            var files = new List<ReleaseManifestFileEntry>(fullList);
+            List<ReleaseManifestFileEntry> files = new List<ReleaseManifestFileEntry>(fullList);
             if (filesRevision != null)
             {
                 uint revisionValue = GetReleaseValue(filesRevision);
@@ -182,9 +182,9 @@ namespace LeagueDownloader
 
         private List<string> GetSolutionReleases(string solutionName)
         {
-            var releases = new List<string>();
-            var releaseListingURL = String.Format("{0}/solutions/{1}/releases/releaselisting", LeagueCDNBaseURL, solutionName);
-            using (var sr = new StringReader(webClient.DownloadString(releaseListingURL)))
+            List<string> releases = new List<string>();
+            string releaseListingURL = String.Format("{0}/solutions/{1}/releases/releaselisting", LeagueCDNBaseURL, solutionName);
+            using (StringReader sr = new StringReader(webClient.DownloadString(releaseListingURL)))
             {
                 string release;
                 while ((release = sr.ReadLine()) != null)
@@ -200,9 +200,9 @@ namespace LeagueDownloader
 
         private List<string> GetProjectReleases(string projectName)
         {
-            var releases = new List<string>();
-            var releaseListingURL = String.Format("{0}/projects/{1}/releases/releaselisting", LeagueCDNBaseURL, projectName);
-            using (var sr = new StringReader(webClient.DownloadString(releaseListingURL)))
+            List<string> releases = new List<string>();
+            string releaseListingURL = String.Format("{0}/projects/{1}/releases/releaselisting", LeagueCDNBaseURL, projectName);
+            using (StringReader sr = new StringReader(webClient.DownloadString(releaseListingURL)))
             {
                 string release;
                 while ((release = sr.ReadLine()) != null)
