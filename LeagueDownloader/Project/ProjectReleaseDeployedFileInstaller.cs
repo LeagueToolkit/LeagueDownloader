@@ -16,7 +16,7 @@ namespace LeagueDownloader.Project
             this.DeployDirectory = releaseDirectory + "/deploy";
             Directory.CreateDirectory(this.DeployDirectory);
 
-            this.SolutionReleaseDirectory = solutionReleaseDirectory;
+            this.SolutionReleaseDirectory = solutionReleaseDirectory + "/deploy";
             if (this.SolutionReleaseDirectory != null)
             {
                 Directory.CreateDirectory(this.SolutionReleaseDirectory);
