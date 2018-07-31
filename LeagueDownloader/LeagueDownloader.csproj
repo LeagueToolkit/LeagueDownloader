@@ -143,7 +143,6 @@
     <Compile Include="Solution\SolutionManifestProjectEntry.cs" />
     <Compile Include="Solution\SolutionRelease.cs" />
     <Compile Include="Utilities.cs" />
-    <Compile Include="Utilities\SubStream.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
