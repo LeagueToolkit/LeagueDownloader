@@ -17,38 +17,42 @@ namespace LeagueDownloader.Content
 
         public byte[] GetAssetData(bool zlibCompressed)
         {
-            WebResponse response = WebRequest.Create(this.RemoteURL).GetResponse();
-            using (MemoryStream ms = new MemoryStream())
+            using (WebResponse response = WebRequest.Create(this.RemoteURL).GetResponse())
             {
-                if (this.IsCompressed == zlibCompressed)
+                using (MemoryStream ms = new MemoryStream())
                 {
-                    response.GetResponseStream().CopyTo(ms);
-                }
-                else
-                {
-                    using (ZlibStream zlibStream = new ZlibStream(response.GetResponseStream(), this.IsCompressed ? CompressionMode.Decompress : CompressionMode.Compress))
+                    if (this.IsCompressed == zlibCompressed)
                     {
-                        zlibStream.CopyTo(ms);
+                        response.GetResponseStream().CopyTo(ms);
                     }
+                    else
+                    {
+                        using (ZlibStream zlibStream = new ZlibStream(response.GetResponseStream(), this.IsCompressed ? CompressionMode.Decompress : CompressionMode.Compress))
+                        {
+                            zlibStream.CopyTo(ms);
+                        }
+                    }
+                    return ms.ToArray();
                 }
-                return ms.ToArray();
             }
         }
 
         public void WriteAssetToFile(string filePath, bool zlibCompressed)
         {
-            WebResponse response = WebRequest.Create(this.RemoteURL).GetResponse();
-            using (FileStream fs = new FileStream(filePath, FileMode.Create))
+            using (WebResponse response = WebRequest.Create(this.RemoteURL).GetResponse())
             {
-                if (this.IsCompressed == zlibCompressed)
+                using (FileStream fs = new FileStream(filePath, FileMode.Create))
                 {
-                    response.GetResponseStream().CopyTo(fs);
-                }
-                else
-                {
-                    using (ZlibStream zlibStream = new ZlibStream(response.GetResponseStream(), this.IsCompressed ? CompressionMode.Decompress : CompressionMode.Compress))
+                    if (this.IsCompressed == zlibCompressed)
                     {
-                        zlibStream.CopyTo(fs);
+                        response.GetResponseStream().CopyTo(fs);
+                    }
+                    else
+                    {
+                        using (ZlibStream zlibStream = new ZlibStream(response.GetResponseStream(), this.IsCompressed ? CompressionMode.Decompress : CompressionMode.Compress))
+                        {
+                            zlibStream.CopyTo(fs);
+                        }
                     }
                 }
             }
