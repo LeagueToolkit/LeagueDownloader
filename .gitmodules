@@ -1,0 +1,3 @@
+[submodule "Fantome.Libraries.RADS"]
+	path = Fantome.Libraries.RADS
+	url = https://github.com/LoL-Fantome/Fantome.Libraries.RADS
