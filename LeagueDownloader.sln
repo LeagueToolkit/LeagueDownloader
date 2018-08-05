@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueDownloader", "LeagueDownloader\LeagueDownloader.csproj", "{F01972B6-EAC6-49F8-9390-D59CE2A0C686}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fantome.Libraries.RADS", "Fantome.Libraries.RADS\Fantome.Libraries.RADS\Fantome.Libraries.RADS.csproj", "{79B7C503-A41F-45BC-ADA0-8D9154F99437}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{F01972B6-EAC6-49F8-9390-D59CE2A0C686}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F01972B6-EAC6-49F8-9390-D59CE2A0C686}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F01972B6-EAC6-49F8-9390-D59CE2A0C686}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79B7C503-A41F-45BC-ADA0-8D9154F99437}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79B7C503-A41F-45BC-ADA0-8D9154F99437}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79B7C503-A41F-45BC-ADA0-8D9154F99437}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79B7C503-A41F-45BC-ADA0-8D9154F99437}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

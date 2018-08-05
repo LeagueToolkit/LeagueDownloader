@@ -36,9 +36,6 @@
     <Reference Include="CommandLine, Version=2.2.1.0, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
       <HintPath>..\packages\CommandLineParser.2.2.1\lib\net45\CommandLine.dll</HintPath>
     </Reference>
-    <Reference Include="Fantome.Libraries.RADS">
-      <HintPath>..\lib\Fantome.Libraries.RADS.dll</HintPath>
-    </Reference>
     <Reference Include="Iconic.Zlib.Netstandard, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Iconic.Zlib.Netstandard.1.0.0\lib\netstandard1.3\Iconic.Zlib.Netstandard.dll</HintPath>
     </Reference>
@@ -149,6 +146,12 @@
       <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fantome.Libraries.RADS\Fantome.Libraries.RADS\Fantome.Libraries.RADS.csproj">
+      <Project>{79b7c503-a41f-45bc-ada0-8d9154f99437}</Project>
+      <Name>Fantome.Libraries.RADS</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
