@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Net;
+using Fantome.Libraries.RADS.IO.SolutionManifest;
 
 namespace LeagueDownloader.Solution
 {

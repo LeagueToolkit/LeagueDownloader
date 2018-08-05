@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Fantome.Libraries.RADS.IO.SolutionManifest;
+using System;
 using System.IO;
 
 namespace LeagueDownloader.Solution

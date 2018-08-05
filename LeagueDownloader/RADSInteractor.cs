@@ -9,6 +9,7 @@ using static LeagueDownloader.Utilities;
 using LeagueDownloader.Solution;
 using LeagueDownloader.Project;
 using LeagueDownloader.Content;
+using Fantome.Libraries.RADS.IO.SolutionManifest;
 
 namespace LeagueDownloader
 {
