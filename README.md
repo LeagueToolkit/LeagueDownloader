@@ -58,7 +58,7 @@ download -n <project_name> -o <output_folder> [-v <project_version> -r <files_re
 Using this option, files will be downloaded in raw format in the specified output folder. That means they won't follow a RADS architecture (no packaging inside RAFs nor sorting by revision).
 
 ### Download multiple revisions of files
-It also possible to download multiple revisions of files of your choice using the ```range-download``` option:
+It is also possible to download multiple revisions of files of your choice using the ```range-download``` option:
 ```
 range-download -n <project_name> -o <output_folder> [-f <filter> -u <cdn_url> --start-revision <start_revision> --end-revision <end_revision> --ignore-older-files <ignore_older_files> --save-manifest <save_manifest>]
 ```
@@ -74,7 +74,7 @@ Let's say you want to download all the files related to Zed from the revision ``
 ```
 range-download -n lol_game_client -o "C:/Zed" -f "DATA/Characters/Zed" --start-revision 0.0.1.10
 ```
-Letting ```ignore-older-files``` to its default value (```false```) will make the tool download earlier files if Zed files weren't changed by the revision ```0.0.1.10``` (so that you still get files that the game would have at version ```0.0.1.10``` even though they were revised earlier).
+Letting ```ignore-older-files``` to its default value (```false```) will make the tool download all Zed files even though they were not changed by the ```0.0.1.10``` patch (this way you still get all the files that the game would use at version ```0.0.1.10```).
 
 ### Discord
 Need some help to use this tool? Want to contribute? If you want to talk to the developers or other people in the community, join our discord server:
