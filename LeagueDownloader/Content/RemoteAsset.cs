@@ -18,9 +18,16 @@ namespace LeagueDownloader.Content
             this.StringVersion = Utilities.GetReleaseString(fileEntry.Version);
             this.FileFullPath = fileEntry.GetFullPath();
             this.IsCompressed = this.FileEntry.SizeCompressed > 0;
-            this.RemoteURL = Uri.EscapeUriString(String.Format("{0}/releases/{1}/files/{2}", projectURL, this.StringVersion, this.FileFullPath));
+
+            string[] fileParts = this.FileFullPath.Split('/');
+            for (int i = 0; i < fileParts.Length; i++)
+            {
+                fileParts[i] = Uri.EscapeDataString(fileParts[i]);
+            }
+            this.RemoteURL = string.Format("{0}/releases/{1}/files/{2}", projectURL, this.StringVersion, string.Join("/", fileParts));
             if (this.IsCompressed)
                 this.RemoteURL += ".compressed";
+
             this.AssetContent = new AssetContent(this.IsCompressed, this.RemoteURL);
         }
     }

@@ -56,16 +56,14 @@ namespace LeagueDownloader
                     try
                     {
                         installation.InstallFile(remoteAsset);
-                        Console.SetCursorPosition(0, Console.CursorTop);
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("■");
                     }
                     catch (Exception)
-                    {
-                        Console.SetCursorPosition(0, Console.CursorTop);
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("■");
+                    {                        
+                        Console.ForegroundColor = ConsoleColor.Red;                        
                     }
+                    Console.SetCursorPosition(0, Console.CursorTop);
+                    Console.WriteLine("■");
                     Console.ResetColor();
                 }
             }
@@ -120,7 +118,16 @@ namespace LeagueDownloader
             {
                 string releaseString = GetReleaseString(r);
                 Console.WriteLine("Retrieving files list for revision " + releaseString);
-                ProjectRelease projectRelease = new ProjectRelease(projectName, releaseString, this.LeagueCDNBaseURL);
+                ProjectRelease projectRelease;
+                try
+                {
+                    projectRelease = new ProjectRelease(projectName, releaseString, this.LeagueCDNBaseURL);
+                } catch (Exception)
+                {
+                    Console.WriteLine("Error getting manifest for release " + releaseString);
+                    continue;
+                }
+                
                 if (saveManifest)
                 {
                     string manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, releaseString);
@@ -149,17 +156,15 @@ namespace LeagueDownloader
             Console.Write("■ Downloading {0}/{1}", remoteAsset.StringVersion, fileFullPath);
             try
             {
-                remoteAsset.AssetContent.WriteAssetToFile(fileOutputPath, false);
-                Console.SetCursorPosition(0, Console.CursorTop);
+                remoteAsset.AssetContent.WriteAssetToFile(fileOutputPath, false);                
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("■");
             }
             catch (Exception)
             {
-                Console.SetCursorPosition(0, Console.CursorTop);
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("■");
+                Console.ForegroundColor = ConsoleColor.Red;                
             }
+            Console.SetCursorPosition(0, Console.CursorTop);
+            Console.WriteLine("■");
             Console.ResetColor();
         }
 
