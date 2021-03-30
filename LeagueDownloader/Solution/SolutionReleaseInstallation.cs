@@ -34,7 +34,7 @@ namespace LeagueDownloader.Solution
 
         public void Dispose()
         {
-            if (OverrideDeployMode == DeployMode.Garena)
+            if (OverrideDeployMode != DeployMode.Garena)
             {
                 File.Create(this.InstallationDirectory + "/S_OK").Close();
             }
