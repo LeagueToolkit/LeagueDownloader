@@ -10,6 +10,7 @@ using LeagueDownloader.Solution;
 using LeagueDownloader.Project;
 using LeagueDownloader.Content;
 using Fantome.Libraries.RADS.IO.SolutionManifest;
+using static Fantome.Libraries.RADS.IO.ReleaseManifest.ReleaseManifestFile;
 
 namespace LeagueDownloader
 {
@@ -24,22 +25,21 @@ namespace LeagueDownloader
             this.LeagueCDNBaseURL = cdnBaseURL;
         }
 
-        public void InstallSolution(string directory, string solutionName, string solutionVersion, string localization, uint? deployMode, bool? forceCompression)
+        public void InstallSolution(string directory, string solutionName, string solutionVersion, string localization, DeployMode? deployMode, bool? forceCompression)
         {
             if (String.Equals(solutionVersion, Constants.LatestVersionString))
                 solutionVersion = GetLatestSolutionRelease(solutionName);
 
             Console.WriteLine("Downloading solution manifest for release {0}", solutionVersion);
             SolutionRelease solutionRelease = new SolutionRelease(solutionName, solutionVersion, this.LeagueCDNBaseURL);
-
-            using (SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization))
+            using (SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization, deployMode))
             {
                 foreach (SolutionManifestProjectEntry project in solutionReleaseInstallation.LocalizedEntry.Projects)
                     InstallProject(directory, project.Name, project.Version, forceCompression, deployMode, solutionName, solutionVersion);
             }
         }
 
-        public void InstallProject(string directory, string projectName, string projectVersion, bool? forceCompression, uint? deployMode, string solutionName = null, string solutionVersion = null)
+        public void InstallProject(string directory, string projectName, string projectVersion, bool? forceCompression, DeployMode? deployMode, string solutionName = null, string solutionVersion = null)
         {
             if (String.Equals(projectVersion, Constants.LatestVersionString))
                 projectVersion = GetLatestProjectRelease(projectName);
@@ -47,7 +47,7 @@ namespace LeagueDownloader
             Console.WriteLine("Downloading manifest for project {0}, release {1}...", projectName, projectVersion);
             ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL, forceCompression);
 
-            using (ProjectReleaseInstallation installation = new ProjectReleaseInstallation(projectRelease, directory, solutionName, solutionVersion))
+            using (ProjectReleaseInstallation installation = new ProjectReleaseInstallation(projectRelease, directory, solutionName, solutionVersion, deployMode))
             {
                 foreach (ReleaseManifestFileEntry file in projectRelease.EnumerateFiles())
                 {

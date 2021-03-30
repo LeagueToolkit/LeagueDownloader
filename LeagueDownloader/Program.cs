@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using static Fantome.Libraries.RADS.IO.ReleaseManifest.ReleaseManifestFile;
 
 namespace LeagueDownloader
 {
@@ -29,7 +30,7 @@ namespace LeagueDownloader
             public string Localization { get; set; }
 
             [Option('d', "deploy-mode", Required = false, Default = null, HelpText = "Forced deploy mode.")]
-            public uint? DeployMode { get; set; }
+            public DeployMode? DeployMode { get; set; }
         }
 
         [Verb("project", HelpText = "Install a project.")]
@@ -42,7 +43,7 @@ namespace LeagueDownloader
             public string Version { get; set; }
 
             [Option('d', "deploy-mode", Required = false, Default = null, HelpText = "Forced deploy mode.")]
-            public uint? DeployMode { get; set; }
+            public DeployMode? DeployMode { get; set; }
         }
 
         abstract class CommonSelectionOptions
