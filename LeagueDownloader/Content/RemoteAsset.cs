@@ -12,12 +12,16 @@ namespace LeagueDownloader.Content
         public bool IsCompressed { get; private set; }
         public AssetContent AssetContent { get; private set; }
 
-        public RemoteAsset(ReleaseManifestFileEntry fileEntry, string projectURL)
+        public RemoteAsset(ReleaseManifestFileEntry fileEntry, string projectURL, bool? forceCompressionOpt)
         {
             this.FileEntry = fileEntry;
             this.StringVersion = Utilities.GetReleaseString(fileEntry.Version);
             this.FileFullPath = fileEntry.GetFullPath();
             this.IsCompressed = this.FileEntry.SizeCompressed > 0;
+            if (forceCompressionOpt is bool forceCompression)
+            {
+                this.IsCompressed = forceCompression;
+            }
 
             string[] fileParts = this.FileFullPath.Split('/');
             for (int i = 0; i < fileParts.Length; i++)

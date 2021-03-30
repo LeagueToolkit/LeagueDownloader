@@ -11,6 +11,9 @@ namespace LeagueDownloader
 
             [Option('u', "cdn-url", Default = Constants.DefaultCDN, Required = false, HelpText = "CDN url to use.")]
             public string CDNBaseURL { get; set; }
+
+            [Option('c', "compression", Default = null, Required = false, HelpText = "Force .compresed files off or on")]
+            public bool? ForceCompression { get; set; }
         }
 
         [Verb("solution", HelpText = "Install a complete solution.")]
@@ -74,6 +77,9 @@ namespace LeagueDownloader
 
             [Option("save-manifest", Required = false, Default = false, HelpText = "Save the downloaded release manifest.")]
             public bool SaveManifest { get; set; }
+
+            [Option('c', "compression", Default = null, Required = false, HelpText = "Force .compresed files off or on")]
+            public bool? ForceCompression { get; set; }
         }
 
         [Verb("range-download", HelpText = "Download files in a range of revisions.")]
@@ -93,6 +99,9 @@ namespace LeagueDownloader
 
             [Option("save-manifest", Required = false, Default = false, HelpText = "Save the downloaded release manifest.")]
             public bool SaveManifest { get; set; }
+
+            [Option('c', "compression", Default = null, Required = false, HelpText = "Force .compresed files off or on")]
+            public bool? ForceCompression { get; set; }
         }
 
         static void Main(string[] args)
@@ -110,14 +119,14 @@ namespace LeagueDownloader
         static int InstallSolution(SolutionOptions opts)
         {
             RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
-            radsInteractor.InstallSolution(opts.OutputFolder, opts.Name, opts.Version, opts.Localization, opts.DeployMode);
+            radsInteractor.InstallSolution(opts.OutputFolder, opts.Name, opts.Version, opts.Localization, opts.DeployMode, opts.ForceCompression);
             return 1;
         }
 
         static int InstallProject(ProjectOptions opts)
         {
             RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
-            radsInteractor.InstallProject(opts.OutputFolder, opts.Name, opts.Version, opts.DeployMode);
+            radsInteractor.InstallProject(opts.OutputFolder, opts.Name, opts.Version, opts.ForceCompression, opts.DeployMode);
             return 1;
         }
 
@@ -131,14 +140,14 @@ namespace LeagueDownloader
         static int DownloadFiles(DownloadOptions opts)
         {
             RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
-            radsInteractor.DownloadFiles(opts.OutputFolder, opts.ProjectName, opts.ProjectVersion, opts.Filter, opts.FilesRevision, opts.SaveManifest);
+            radsInteractor.DownloadFiles(opts.OutputFolder, opts.ProjectName, opts.ProjectVersion, opts.ForceCompression, opts.Filter, opts.FilesRevision, opts.SaveManifest);
             return 1;
         }
 
         static int RangeDownloadFiles(RangeDownloadOptions opts)
         {
             RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
-            radsInteractor.RangeDownloadFiles(opts.OutputFolder, opts.ProjectName, opts.IgnoreOlderFiles, opts.Filter, opts.StartRevision, opts.EndRevision, opts.SaveManifest);
+            radsInteractor.RangeDownloadFiles(opts.OutputFolder, opts.ProjectName, opts.ForceCompression, opts.IgnoreOlderFiles, opts.Filter, opts.StartRevision, opts.EndRevision, opts.SaveManifest);
             return 1;
         }
     }
