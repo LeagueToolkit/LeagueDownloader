@@ -10,6 +10,7 @@ using LeagueDownloader.Solution;
 using LeagueDownloader.Project;
 using LeagueDownloader.Content;
 using Fantome.Libraries.RADS.IO.SolutionManifest;
+using static Fantome.Libraries.RADS.IO.ReleaseManifest.ReleaseManifestFile;
 
 namespace LeagueDownloader
 {
@@ -24,30 +25,29 @@ namespace LeagueDownloader
             this.LeagueCDNBaseURL = cdnBaseURL;
         }
 
-        public void InstallSolution(string directory, string solutionName, string solutionVersion, string localization, uint? deployMode)
+        public void InstallSolution(string directory, string solutionName, string solutionVersion, string localization, DeployMode? deployMode, bool? forceCompression)
         {
             if (String.Equals(solutionVersion, Constants.LatestVersionString))
                 solutionVersion = GetLatestSolutionRelease(solutionName);
 
             Console.WriteLine("Downloading solution manifest for release {0}", solutionVersion);
             SolutionRelease solutionRelease = new SolutionRelease(solutionName, solutionVersion, this.LeagueCDNBaseURL);
-
-            using (SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization))
+            using (SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization, deployMode))
             {
                 foreach (SolutionManifestProjectEntry project in solutionReleaseInstallation.LocalizedEntry.Projects)
-                    InstallProject(directory, project.Name, project.Version, deployMode, solutionName, solutionVersion);
+                    InstallProject(directory, project.Name, project.Version, forceCompression, deployMode, solutionName, solutionVersion);
             }
         }
 
-        public void InstallProject(string directory, string projectName, string projectVersion, uint? deployMode, string solutionName = null, string solutionVersion = null)
+        public void InstallProject(string directory, string projectName, string projectVersion, bool? forceCompression, DeployMode? deployMode, string solutionName = null, string solutionVersion = null)
         {
             if (String.Equals(projectVersion, Constants.LatestVersionString))
                 projectVersion = GetLatestProjectRelease(projectName);
 
             Console.WriteLine("Downloading manifest for project {0}, release {1}...", projectName, projectVersion);
-            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
+            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL, forceCompression);
 
-            using (ProjectReleaseInstallation installation = new ProjectReleaseInstallation(projectRelease, directory, solutionName, solutionVersion))
+            using (ProjectReleaseInstallation installation = new ProjectReleaseInstallation(projectRelease, directory, solutionName, solutionVersion, deployMode))
             {
                 foreach (ReleaseManifestFileEntry file in projectRelease.EnumerateFiles())
                 {
@@ -74,19 +74,19 @@ namespace LeagueDownloader
             if (String.Equals(projectVersion, Constants.LatestVersionString))
                 projectVersion = GetLatestProjectRelease(projectName);
 
-            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
+            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL, null);
 
             List<ReleaseManifestFileEntry> files = FilterFiles(projectRelease.EnumerateFiles(), filter, filesRevision);
             foreach (ReleaseManifestFileEntry file in files)
                 Console.WriteLine("{0}/{1}", GetReleaseString(file.Version), file.GetFullPath());
         }
 
-        public void DownloadFiles(string directory, string projectName, string projectVersion, string filter = null, string filesRevision = null, bool saveManifest = false)
+        public void DownloadFiles(string directory, string projectName, string projectVersion, bool? forceCompression, string filter = null, string filesRevision = null, bool saveManifest = false)
         {
             if (String.Equals(projectVersion, Constants.LatestVersionString))
                 projectVersion = GetLatestProjectRelease(projectName);
 
-            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
+            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL, forceCompression);
             if (saveManifest)
             {
                 string manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, projectVersion);
@@ -104,7 +104,7 @@ namespace LeagueDownloader
             }
         }
 
-        public void RangeDownloadFiles(string directory, string projectName, bool ignoreOlderFiles = false, string filter = null, string startRevision = null, string endRevision = null, bool saveManifest = false)
+        public void RangeDownloadFiles(string directory, string projectName, bool? forceCompression, bool ignoreOlderFiles = false, string filter = null, string startRevision = null, string endRevision = null, bool saveManifest = false)
         {
             List<string> releases = GetProjectReleases(projectName);
             uint startRevisionValue = startRevision == null ? 0 : GetReleaseValue(startRevision);
@@ -121,7 +121,7 @@ namespace LeagueDownloader
                 ProjectRelease projectRelease;
                 try
                 {
-                    projectRelease = new ProjectRelease(projectName, releaseString, this.LeagueCDNBaseURL);
+                    projectRelease = new ProjectRelease(projectName, releaseString, this.LeagueCDNBaseURL, forceCompression);
                 } catch (Exception)
                 {
                     Console.WriteLine("Error getting manifest for release " + releaseString);

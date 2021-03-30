@@ -2,6 +2,7 @@
 using System.Text;
 using System.Net;
 using Fantome.Libraries.RADS.IO.SolutionManifest;
+using static Fantome.Libraries.RADS.IO.ReleaseManifest.ReleaseManifestFile;
 
 namespace LeagueDownloader.Solution
 {
@@ -26,12 +27,12 @@ namespace LeagueDownloader.Solution
             return new SolutionManifest(Encoding.ASCII.GetString(solutionManifestData).Split(new[] { "\r\n" }, StringSplitOptions.None));
         }
 
-        public SolutionReleaseInstallation CreateInstallation(string installDirectory, string localization)
+        public SolutionReleaseInstallation CreateInstallation(string installDirectory, string localization, DeployMode? deployMode)
         {
             SolutionManifestLocalizedEntry localizedEntry = this.SolutionManifest.LocalizedEntries.Find(x => x.Name.Equals(localization, StringComparison.InvariantCultureIgnoreCase));
             if (localizedEntry != null)
             {
-                return new SolutionReleaseInstallation(this, localizedEntry, installDirectory);
+                return new SolutionReleaseInstallation(this, localizedEntry, installDirectory, deployMode);
             }
             else
             {

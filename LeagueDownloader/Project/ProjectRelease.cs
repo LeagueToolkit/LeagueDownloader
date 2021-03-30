@@ -14,8 +14,9 @@ namespace LeagueDownloader.Project
         public ReleaseManifestFile ReleaseManifest { get; private set; }
         public string ProjectBaseURL { get; private set; }
         public string ReleaseBaseURL { get; private set; }
+        public bool? ForceCompression { get; private set; }
 
-        public ProjectRelease(string name, string version, string leagueCDNBaseURL)
+        public ProjectRelease(string name, string version, string leagueCDNBaseURL, bool? forceCompression)
         {
             this.Name = name;
             this.Version = version;
@@ -23,6 +24,7 @@ namespace LeagueDownloader.Project
             this.ProjectBaseURL = String.Format("{0}/projects/{1}", this.LeagueCDNBaseURL, this.Name);
             this.ReleaseBaseURL = String.Format("{0}/releases/{1}", this.ProjectBaseURL, this.Version);
             this.ReleaseManifest = new ReleaseManifestFile(new WebClient().OpenRead(this.ReleaseBaseURL + "/releasemanifest"));
+            this.ForceCompression = forceCompression;
         }
 
         public List<ReleaseManifestFileEntry> EnumerateFiles()
@@ -42,7 +44,7 @@ namespace LeagueDownloader.Project
 
         public RemoteAsset GetRemoteAsset(ReleaseManifestFileEntry fileEntry)
         {
-            return new RemoteAsset(fileEntry, this.ProjectBaseURL);
+            return new RemoteAsset(fileEntry, this.ProjectBaseURL, ForceCompression);
         }
     }
 }
