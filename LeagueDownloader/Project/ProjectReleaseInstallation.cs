@@ -34,7 +34,7 @@ namespace LeagueDownloader.Project
             this.ProjectReleaseDeployedFileInstaller = new ProjectReleaseDeployedFileInstaller(this.ProjectReleaseDirectory, solutionReleaseDirectory);
         }
 
-        public void InstallFile(RemoteAsset remoteAsset)
+        public ProjectReleaseFileInstaller GetFileInstaller(RemoteAsset remoteAsset)
         {
             ProjectReleaseFileInstaller fileInstaller;
             switch (remoteAsset.FileEntry.DeployMode)
@@ -53,7 +53,7 @@ namespace LeagueDownloader.Project
                 default:
                     throw new Exception("Unknown deploy mode");
             }
-            fileInstaller.InstallFile(remoteAsset);
+            return fileInstaller;
         }
 
         public void Dispose()

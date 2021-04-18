@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Net;
 using Ionic.Zlib;
 
@@ -8,6 +9,7 @@ namespace LeagueDownloader.Content
     {
         public bool IsCompressed { get; private set; }
         public string RemoteURL { get; private set; }
+        public byte[] AssetData { get; private set; }
 
         public AssetContent(bool isCompressed, string remoteURL)
         {
@@ -17,45 +19,69 @@ namespace LeagueDownloader.Content
 
         public byte[] GetAssetData(bool zlibCompressed)
         {
-            using (WebResponse response = WebRequest.Create(this.RemoteURL).GetResponse())
+            if (this.AssetData == null)
             {
-                using (MemoryStream ms = new MemoryStream())
+                throw new Exception("Asset not downloaded.");
+            }
+
+            if (this.IsCompressed == zlibCompressed)
+            {
+                return this.AssetData;
+            }
+            else
+            {
+                using (MemoryStream ms = new MemoryStream(this.AssetData))
                 {
-                    if (this.IsCompressed == zlibCompressed)
+                    using (MemoryStream msOut = new MemoryStream())
                     {
-                        response.GetResponseStream().CopyTo(ms);
-                    }
-                    else
-                    {
-                        using (ZlibStream zlibStream = new ZlibStream(response.GetResponseStream(), this.IsCompressed ? CompressionMode.Decompress : CompressionMode.Compress))
+                        using (ZlibStream zlibStream = new ZlibStream(ms, this.IsCompressed ? CompressionMode.Decompress : CompressionMode.Compress))
                         {
-                            zlibStream.CopyTo(ms);
+                            zlibStream.CopyTo(msOut);
+                            return msOut.ToArray();
                         }
                     }
-                    return ms.ToArray();
+
                 }
             }
         }
 
         public void WriteAssetToFile(string filePath, bool zlibCompressed)
         {
-            using (WebResponse response = WebRequest.Create(this.RemoteURL).GetResponse())
+            if (this.AssetData == null)
+            {
+                throw new Exception("Asset not downloaded.");
+            }
+
+            using (MemoryStream ms = new MemoryStream(this.AssetData))
             {
                 using (FileStream fs = new FileStream(filePath, FileMode.Create))
                 {
                     if (this.IsCompressed == zlibCompressed)
                     {
-                        response.GetResponseStream().CopyTo(fs);
+                        ms.CopyTo(fs);
                     }
                     else
                     {
-                        using (ZlibStream zlibStream = new ZlibStream(response.GetResponseStream(), this.IsCompressed ? CompressionMode.Decompress : CompressionMode.Compress))
+                        using (ZlibStream zlibStream = new ZlibStream(ms, this.IsCompressed ? CompressionMode.Decompress : CompressionMode.Compress))
                         {
                             zlibStream.CopyTo(fs);
                         }
                     }
                 }
             }
+        }
+
+        public void DownloadAssetData()
+        {
+            using (WebClient webClient = new WebClient())
+            {
+                this.AssetData = webClient.DownloadData(this.RemoteURL);
+            }
+        }
+
+        public void FlushAssetData()
+        {
+            this.AssetData = null;
         }
     }
 }

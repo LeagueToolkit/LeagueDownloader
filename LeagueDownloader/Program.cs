@@ -117,7 +117,7 @@ namespace LeagueDownloader
         static int InstallProject(ProjectOptions opts)
         {
             RADSInteractor radsInteractor = new RADSInteractor(opts.CDNBaseURL);
-            radsInteractor.InstallProject(opts.OutputFolder, opts.Name, opts.Version, opts.DeployMode);
+            radsInteractor.InstallProject(null, opts.OutputFolder, opts.Name, opts.Version, opts.DeployMode);
             return 1;
         }
 

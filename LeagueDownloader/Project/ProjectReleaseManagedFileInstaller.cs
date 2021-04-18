@@ -15,14 +15,26 @@ namespace LeagueDownloader.Project
             Directory.CreateDirectory(this.ManagedFilesDirectory);
         }
 
+        private string GetFilePath(RemoteAsset remoteAsset)
+        {
+            return String.Format("{0}/{1}/{2}", this.ManagedFilesDirectory, remoteAsset.StringVersion, remoteAsset.FileFullPath);
+        }
+
         public override void InstallFile(RemoteAsset remoteAsset)
         {
-            string filePath = String.Format("{0}/{1}/{2}", this.ManagedFilesDirectory, remoteAsset.StringVersion, remoteAsset.FileFullPath);
+            string filePath = GetFilePath(remoteAsset);
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath));
+            remoteAsset.AssetContent.WriteAssetToFile(filePath, false);
+        }
+
+        public override bool IsFileInstalled(RemoteAsset remoteAsset)
+        {
+            string filePath = GetFilePath(remoteAsset);
             if (!File.Exists(filePath) || !Enumerable.SequenceEqual(remoteAsset.FileEntry.MD5, Utilities.CalculateMD5(filePath)))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                remoteAsset.AssetContent.WriteAssetToFile(filePath, false);
+                return false;
             }
+            return true;
         }
     }
 }

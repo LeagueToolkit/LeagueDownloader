@@ -29,42 +29,48 @@ namespace LeagueDownloader
             if (String.Equals(solutionVersion, Constants.LatestVersionString))
                 solutionVersion = GetLatestSolutionRelease(solutionName);
 
-            Console.WriteLine("Downloading solution manifest for release {0}", solutionVersion);
-            SolutionRelease solutionRelease = new SolutionRelease(solutionName, solutionVersion, this.LeagueCDNBaseURL);
-
-            using (SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization))
+            using (DownloadSession downloadSession = new DownloadSession(String.Format("Installing solution {0} (version {1})", solutionName, solutionVersion)))
             {
-                foreach (SolutionManifestProjectEntry project in solutionReleaseInstallation.LocalizedEntry.Projects)
-                    InstallProject(directory, project.Name, project.Version, deployMode, solutionName, solutionVersion);
+                SolutionRelease solutionRelease = downloadSession.GetSolutionRelease(solutionName, solutionVersion, this.LeagueCDNBaseURL);
+
+                using (SolutionReleaseInstallation solutionReleaseInstallation = solutionRelease.CreateInstallation(directory, localization))
+                {
+                    foreach (SolutionManifestProjectEntry project in solutionReleaseInstallation.LocalizedEntry.Projects)
+                    {
+                        InstallProject(downloadSession, directory, project.Name, project.Version, deployMode, solutionName, solutionVersion);
+                    }
+                }
             }
         }
 
-        public void InstallProject(string directory, string projectName, string projectVersion, uint? deployMode, string solutionName = null, string solutionVersion = null)
+        public void InstallProject(DownloadSession parentDownloadSession, string directory, string projectName, string projectVersion, uint? deployMode, string solutionName = null, string solutionVersion = null)
         {
             if (String.Equals(projectVersion, Constants.LatestVersionString))
+            {
                 projectVersion = GetLatestProjectRelease(projectName);
+            }
 
-            Console.WriteLine("Downloading manifest for project {0}, release {1}...", projectName, projectVersion);
-            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
+            DownloadSession downloadSession = parentDownloadSession != null ? parentDownloadSession : new DownloadSession(String.Format("Installing project {0} (version {1})", projectName, projectVersion));
+            downloadSession.ResetRegisteredFiles();
+
+            ProjectRelease projectRelease = downloadSession.GetProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
+            if (deployMode != null)
+            {
+                projectRelease.EnumerateFiles().ForEach(x => x.DeployMode = (ReleaseManifestFile.DeployMode)deployMode);
+            }
 
             using (ProjectReleaseInstallation installation = new ProjectReleaseInstallation(projectRelease, directory, solutionName, solutionVersion))
             {
                 foreach (ReleaseManifestFileEntry file in projectRelease.EnumerateFiles())
                 {
                     RemoteAsset remoteAsset = projectRelease.GetRemoteAsset(file);
-                    Console.Write("■ Downloading {0}/{1}", remoteAsset.StringVersion, remoteAsset.FileFullPath);
-                    try
-                    {
-                        installation.InstallFile(remoteAsset);
-                        Console.ForegroundColor = ConsoleColor.Green;
-                    }
-                    catch (Exception)
-                    {                        
-                        Console.ForegroundColor = ConsoleColor.Red;                        
-                    }
-                    Console.SetCursorPosition(0, Console.CursorTop);
-                    Console.WriteLine("■");
-                    Console.ResetColor();
+                    downloadSession.RegisterFile(remoteAsset, installation.GetFileInstaller(remoteAsset));
+                }
+                downloadSession.DoWork();
+                
+                if (parentDownloadSession == null)
+                {
+                    downloadSession.Dispose();
                 }
             }
         }
@@ -72,7 +78,9 @@ namespace LeagueDownloader
         public void ListFiles(string projectName, string projectVersion, string filter = null, string filesRevision = null)
         {
             if (String.Equals(projectVersion, Constants.LatestVersionString))
+            {
                 projectVersion = GetLatestProjectRelease(projectName);
+            }                
 
             ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
 
@@ -86,21 +94,24 @@ namespace LeagueDownloader
             if (String.Equals(projectVersion, Constants.LatestVersionString))
                 projectVersion = GetLatestProjectRelease(projectName);
 
-            ProjectRelease projectRelease = new ProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
-            if (saveManifest)
+            using (DownloadSession downloadSession = new DownloadSession(String.Format("Downloading files from project {0} (version {1})", projectName, projectVersion)))
             {
-                string manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, projectVersion);
-                Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
-                projectRelease.ReleaseManifest.Write(manifestPath);
-            }
+                ProjectRelease projectRelease = downloadSession.GetProjectRelease(projectName, projectVersion, this.LeagueCDNBaseURL);
+                if (saveManifest)
+                {
+                    string manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, projectVersion);
+                    Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
+                    projectRelease.ReleaseManifest.Write(manifestPath);
+                }
 
-            List<ReleaseManifestFileEntry> files = FilterFiles(projectRelease.EnumerateFiles(), filter, filesRevision);
-            Console.WriteLine("{0} files to download", files.Count);
-            foreach (ReleaseManifestFileEntry file in files)
-            {
-                string fileFullPath = file.GetFullPath();
-                string fileOutputPath = String.Format("{0}/{1}/releases/{2}/files/{3}", directory, projectName, projectVersion, fileFullPath);
-                DownloadFile(projectRelease, file, fileOutputPath, fileFullPath);
+                List<ReleaseManifestFileEntry> files = FilterFiles(projectRelease.EnumerateFiles(), filter, filesRevision);
+
+                ProjectReleaseFileInstaller fileInstaller = new ProjectReleaseSimpleFileInstaller(directory, projectRelease, false);
+                foreach (ReleaseManifestFileEntry file in files)
+                {
+                    downloadSession.RegisterFile(projectRelease.GetRemoteAsset(file), fileInstaller);
+                }
+                downloadSession.DoWork();
             }
         }
 
@@ -113,59 +124,42 @@ namespace LeagueDownloader
             // Check if specified releases exist
             startRevisionValue = Math.Max(startRevisionValue, GetReleaseValue(releases.Last()));
             endRevisionValue = Math.Min(endRevisionValue, GetReleaseValue(releases[0]));
-
-            for (uint r = startRevisionValue; r <= endRevisionValue; r++)
+            using (DownloadSession downloadSession = new DownloadSession(String.Format("Downloading files from project {0} (revisions {1} to {2})", projectName, GetReleaseString(startRevisionValue), GetReleaseString(endRevisionValue))))
             {
-                string releaseString = GetReleaseString(r);
-                Console.WriteLine("Retrieving files list for revision " + releaseString);
-                ProjectRelease projectRelease;
-                try
+                for (uint r = startRevisionValue; r <= endRevisionValue; r++)
                 {
-                    projectRelease = new ProjectRelease(projectName, releaseString, this.LeagueCDNBaseURL);
-                } catch (Exception)
-                {
-                    Console.WriteLine("Error getting manifest for release " + releaseString);
-                    continue;
-                }
-                
-                if (saveManifest)
-                {
-                    string manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, releaseString);
-                    Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
-                    projectRelease.ReleaseManifest.Write(manifestPath);
-                }
+                    downloadSession.ResetRegisteredFiles();
+                    string releaseString = GetReleaseString(r);
+                    ProjectRelease projectRelease;
+                    try
+                    {
+                        projectRelease = downloadSession.GetProjectRelease(projectName, releaseString, this.LeagueCDNBaseURL);
+                    }
+                    catch (Exception)
+                    {
+                        continue;
+                    }
 
-                List<ReleaseManifestFileEntry> files = FilterFiles(projectRelease.EnumerateFiles(), filter, (r != startRevisionValue || ignoreOlderFiles) ? releaseString : null);
-                foreach (ReleaseManifestFileEntry fileEntry in files)
-                {
-                    string fileFullPath = fileEntry.GetFullPath();
-                    string fileOutputPath = String.Format("{0}/{1}/releases/{2}/files/{3}", directory, projectName, GetReleaseString(fileEntry.Version), fileFullPath);
-                    DownloadFile(projectRelease, fileEntry, fileOutputPath, fileFullPath);
+                    if (saveManifest)
+                    {
+                        string manifestPath = String.Format("{0}/{1}/releases/{2}/releasemanifest", directory, projectName, releaseString);
+                        Directory.CreateDirectory(Path.GetDirectoryName(manifestPath));
+                        projectRelease.ReleaseManifest.Write(manifestPath);
+                    }
+
+                    List<ReleaseManifestFileEntry> files = FilterFiles(projectRelease.EnumerateFiles(), filter, (r != startRevisionValue || ignoreOlderFiles) ? releaseString : null);
+                    if (files.Count > 0)
+                    {
+
+                        ProjectReleaseFileInstaller fileInstaller = new ProjectReleaseSimpleFileInstaller(directory, projectRelease, true);
+                        foreach (ReleaseManifestFileEntry file in files)
+                        {
+                            downloadSession.RegisterFile(projectRelease.GetRemoteAsset(file), fileInstaller);
+                        }
+                        downloadSession.DoWork();
+                    }
                 }
             }
-        }
-
-        private void DownloadFile(ProjectRelease projectRelease, ReleaseManifestFileEntry file, string fileOutputPath, string fileFullPath)
-        {
-            // Check if file is already downloaded and is in perfect condition.
-            if (File.Exists(fileOutputPath) && Enumerable.SequenceEqual(file.MD5, CalculateMD5(fileOutputPath)))
-                return;
-
-            Directory.CreateDirectory(Path.GetDirectoryName(fileOutputPath));
-            RemoteAsset remoteAsset = projectRelease.GetRemoteAsset(file);
-            Console.Write("■ Downloading {0}/{1}", remoteAsset.StringVersion, fileFullPath);
-            try
-            {
-                remoteAsset.AssetContent.WriteAssetToFile(fileOutputPath, false);                
-                Console.ForegroundColor = ConsoleColor.Green;
-            }
-            catch (Exception)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;                
-            }
-            Console.SetCursorPosition(0, Console.CursorTop);
-            Console.WriteLine("■");
-            Console.ResetColor();
         }
 
         private List<ReleaseManifestFileEntry> FilterFiles(List<ReleaseManifestFileEntry> fullList, string filter = null, string filesRevision = null)

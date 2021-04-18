@@ -12,7 +12,7 @@ namespace LeagueDownloader.Project
     {
         public string ArchivesDirectory { get; private set; }
 
-        private List<ArchiveVersionDirectory> rafDirectories = new List<ArchiveVersionDirectory>();
+        private readonly List<ArchiveVersionDirectory> rafDirectories = new List<ArchiveVersionDirectory>();
 
         public ProjectReleaseArchivedFileInstaller(string installationDirectory)
         {
@@ -34,8 +34,23 @@ namespace LeagueDownloader.Project
         public override void InstallFile(RemoteAsset remoteAsset)
         {
             ArchiveVersionDirectory foundDirectory = this.GetArchiveDirectory(remoteAsset.StringVersion);
+            foreach (RAF raf in foundDirectory.Archives)
+            {
+                RAFFileEntry fileEntry = raf.Files.Find(x => x.Path.Equals(remoteAsset.FileFullPath, StringComparison.InvariantCultureIgnoreCase));
+                if (fileEntry != null)
+                {
+                    raf.Files.Remove(fileEntry);
+                }
+            }
 
-            bool fileAlreadyDownloaded = false;
+            foundDirectory.Archives[0].AddFile(remoteAsset.FileFullPath, remoteAsset.AssetContent.GetAssetData(remoteAsset.FileEntry.DeployMode == RAFCompressed), false);
+            foundDirectory.Archives[0].Save();
+        }
+
+        public override bool IsFileInstalled(RemoteAsset remoteAsset)
+        {
+            ArchiveVersionDirectory foundDirectory = this.GetArchiveDirectory(remoteAsset.StringVersion);
+
             foreach (RAF raf in foundDirectory.Archives)
             {
                 RAFFileEntry fileEntry = raf.Files.Find(x => x.Path.Equals(remoteAsset.FileFullPath, StringComparison.InvariantCultureIgnoreCase));
@@ -44,28 +59,13 @@ namespace LeagueDownloader.Project
                     try
                     {
                         byte[] fileEntryContent = fileEntry.GetContent(remoteAsset.FileEntry.DeployMode == RAFCompressed);
-                        if (Enumerable.SequenceEqual(remoteAsset.FileEntry.MD5, Utilities.CalculateMD5(fileEntryContent)))
-                        {
-                            fileAlreadyDownloaded = true;
-                        }
+                        return Enumerable.SequenceEqual(remoteAsset.FileEntry.MD5, Utilities.CalculateMD5(fileEntryContent));
                     }
-                    catch (Exception) { }
-
-                    if (fileAlreadyDownloaded)
-                    {
-                        break;
-                    }
-                    else
-                    {
-                        raf.Files.Remove(fileEntry);
-                    }
+                    catch (Exception) { return false; }
                 }
             }
-            if (!fileAlreadyDownloaded)
-            {
-                foundDirectory.Archives[0].AddFile(remoteAsset.FileFullPath, remoteAsset.AssetContent.GetAssetData(remoteAsset.FileEntry.DeployMode == RAFCompressed), false);
-                foundDirectory.Archives[0].Save();
-            }
+
+            return false;
         }
 
         public void Dispose()
