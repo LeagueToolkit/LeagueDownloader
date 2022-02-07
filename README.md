@@ -1,4 +1,7 @@
 # LeagueDownloader
+
+### Notice: This tool no longer works anymore since Riot shut down their RADS CDN in 2021.
+
 LeagueDownloader is a command line tool that allows you to download and install any version from League of Legends using Riot's CDN.
 
 [Get the latest version](https://github.com/LoL-Fantome/LeagueDownloader/releases/)
